@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { MapPin, Loader2, Navigation } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../components/ui/button";
 
 interface Location {
   state: string;

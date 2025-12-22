@@ -1,9 +1,10 @@
 "use client";
 import { Button } from "@/app/components/ui/button";
 import { ArrowRight, Leaf, BarChart3, Satellite, Sparkles } from "lucide-react";
-import Header from "@/app/components/navbar/page";
+import Header from "@/app/navbar/page";
 
-export default function HeroSection() {
+export default  function HeroSection() {
+
   const features = [
     { icon: Leaf, label: "Soil Analysis", color: "bg-amber-700" },
     { icon: BarChart3, label: "Yield Prediction", color: "bg-emerald-700" },

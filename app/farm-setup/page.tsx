@@ -7,7 +7,7 @@ import { Loader2, ArrowRight, Sprout, User } from "lucide-react";
 import LocationSelector from "../locationselector/page";
 import CropSelector from "../cropselector/page";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
@@ -34,7 +34,6 @@ export default function FarmSetup() {
     landSize: 0,
     landUnit: "acres" as "acres" | "hectares" | "bigha",
   });
-
   const [isSaving, setIsSaving] = useState(false);
 
   /* -------------------- VALIDATION -------------------- */
@@ -87,7 +86,7 @@ export default function FarmSetup() {
         return;
       }
 
-      router.push("/components/crophealth");
+      router.push("/crophealth");
     } catch (err) {
       console.error(err);
       alert("Unexpected error occurred");

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 import {
@@ -47,19 +47,19 @@ export default function Header() {
       id: "problem",
       label: "Report Problem",
       icon: AlertTriangle,
-      href: "/components/reportAProblem",
+      href: "/reportAProblem",
     },
     {
       id: "crophealth",
       label: "Crop Health",
       icon: Leaf,
-      href: "/components/crophealth",
+      href: "/crophealth",
     },
   ];
 
   /* ---------------- ACTIVE SECTION ---------------- */
   const activeSection =
-    pathname === "/components/profile"
+    pathname === "/profile"
       ? "profile"
       : navItems.find(
           (item) =>
@@ -138,7 +138,7 @@ export default function Header() {
               </button>
             ) : (
               <button
-                onClick={() => router.push("/components/profile")}
+                onClick={() => router.push("/profile")}
                 className={cn(
                   navBtnBase,
                   activeSection === "profile"
@@ -156,8 +156,8 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-3">
             <Button
               size="lg"
-              className="bg-linear-to-br from-[#195733] to-emerald-700 text-white hover:-translate-y-1 font-semibold px-8 py-6 text-lg rounded-xl shadow-lg"
-              onClick={() => router.push("analysis")}
+              className="bg-linear-to-br from-[#195733] to-emerald-700 text-white hover:-translate-y-1 font-semibold px-8 py-6 text-lg rounded-xl shadow-lg cursor-pointer transition-all"
+              onClick={() => router.push("/analysis")}
             >
               Start Analysis
             </Button>
@@ -213,7 +213,7 @@ export default function Header() {
               ) : (
                 <button
                   onClick={() => {
-                    router.push("/components/profile");
+                    router.push("/profile");
                     setMobileMenuOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1f643c] hover:bg-[#195733]/10"

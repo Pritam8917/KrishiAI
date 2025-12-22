@@ -1,18 +1,20 @@
 "use client";
-import HeroSection from '@/app/components/home/page';
-import Footer from './components/footer/page';
-import Features from './components/features/page';
-import DemoPreview from './components/demo/page';
+import HeroSection from "@/app/home/page";
+import Footer from "./footer/page";
+import Features from "./features/page";
+import DemoPreview from "./demo/page";
 
-const page = () => {
+const Page = () => {
+
+
   return (
     <div className="min-h-screen bg-white">
-      <HeroSection/>
-     <DemoPreview/>
-      <Features/>
-      <Footer/>
+      <HeroSection />
+      <DemoPreview />
+      <Features />
+      <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default Page;

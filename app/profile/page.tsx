@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { User, MapPin, Leaf, Ruler, Edit, Sprout } from "lucide-react";
@@ -52,31 +52,20 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
-  {/* Dotted background */}
-  <div
-    className="
-      absolute inset-0
-      bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)]
-      bg-size-[36px_36px]
-      opacity-30
-      pointer-events-none
-    "
-  />
+        {/* Dotted background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
 
-  {/* Loader content */}
-  <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-    <div className="h-16 w-16 flex items-center justify-center">
-      <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
-    </div>
+        {/* Loader content */}
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+          <div className="h-16 w-16 flex items-center justify-center">
+            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
+          </div>
 
-    <p className="text-md font-medium text-[#195733]">
-      Preparing your farm details…
-    </p>
-
-    
-  </div>
-</div>
-
+          <p className="text-xl font-medium text-[#195733]">
+            Preparing your farm details…
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -84,9 +73,7 @@ export default function ProfilePage() {
     return (
       <div className="text-center mt-20">
         <p>No farm profile found</p>
-        <Button onClick={() => router.push("/components/farm-setup")}>
-          Set up farm
-        </Button>
+        <Button onClick={() => router.push("/farm-setup")}>Set up farm</Button>
       </div>
     );
   }
@@ -97,15 +84,7 @@ export default function ProfilePage() {
       <Header />
 
       {/* Big dotted classic background */}
-      <div
-        className="
-      absolute inset-0
-      bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)]
-      bg-size-[36px_36px]
-      opacity-30
-      pointer-events-none
-    "
-      />
+      <div className=" absolute inset-0 bg-[#F8F8F2]" />
 
       {/* Page content */}
       <div className="relative z-10 py-20 px-4">
@@ -197,7 +176,7 @@ export default function ProfilePage() {
             transition-all
             shadow cursor-pointer
           "
-              onClick={() => router.push("/components/farm-setup")}
+              onClick={() => router.push("/farm-setup")}
             >
               <Edit className="w-4 h-4" />
               Edit Farm Details

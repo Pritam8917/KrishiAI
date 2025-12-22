@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import Image from "next/image";
@@ -31,11 +31,11 @@ export default function LoginPage() {
       .select("id")
       .eq("user_id", userId)
       .single();
-
+    router.refresh();
     if (!farmProfile) {
       router.push("/farm-setup");
     } else {
-      router.push("/crop-health");
+      router.push("/crophealth");
     }
   };
 

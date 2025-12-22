@@ -2,29 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  Leaf,
-  Satellite,
-  TrendingUp,
-  Info,
-  MapPin,
-  Clock,
-  ShieldAlert,
-} from "lucide-react";
-
-import Header from "../navbar/page";
+import { AlertTriangle,Leaf,Satellite,TrendingUp,Info,MapPin,Clock,ShieldAlert,Sprout,} from "lucide-react";
+import Header from "@/app/navbar/page";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
-/* ---------------- ANIMATIONS ---------------- */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 };
 
-export default function CropHealthPage() {
+export default function CropHealth() {
   const [hasReportedIssue, setHasReportedIssue] = useState(false);
   const [farmLocation, setFarmLocation] = useState<{
     state: string;
@@ -33,14 +22,18 @@ export default function CropHealthPage() {
     village: string;
     cropType: string;
   } | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchFarmProfile = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) return;
-
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from("farm_profiles")
         .select("state, district, block, village, crop")
@@ -56,10 +49,38 @@ export default function CropHealthPage() {
           cropType: data.crop ?? "",
         });
       }
+      setLoading(false);
     };
 
     fetchFarmProfile();
   }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+
+        <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
+        <div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none"
+        />
+
+        {/* Loader content */}
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+          <div className="h-16 w-16 flex items-center justify-center">
+            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
+          </div>
+
+          <p className="text-xl font-medium text-[#195733]">
+           Analyzing crop health data…
+          </p>
+             
+        </div>
+      </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -107,7 +128,9 @@ export default function CropHealthPage() {
                 <Leaf className="w-5 h-5 text-[#195733]" />
                 <div>
                   <p className="text-xs text-gray-500">Crop</p>
-                  <p className="font-semibold">{farmLocation?.cropType || "Loading..."}</p>
+                  <p className="font-semibold">
+                    {farmLocation?.cropType || "Loading..."}
+                  </p>
                 </div>
               </CardContent>
             </Card>
