@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle,Leaf,Satellite,TrendingUp,Info,MapPin,Clock,ShieldAlert,Sprout,} from "lucide-react";
+import {
+  AlertTriangle,
+  Leaf,
+  Satellite,
+  TrendingUp,
+  Info,
+  MapPin,
+  Clock,
+  ShieldAlert,
+  Sprout,
+} from "lucide-react";
 import Header from "@/app/navbar/page";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
+import axios from "axios";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -21,10 +32,25 @@ export default function CropHealth() {
     block: string;
     village: string;
     cropType: string;
+    lat?: number;
+    lon?: number;
   } | null>(null);
+
   const [loading, setLoading] = useState(true);
+  const [ndvi, setNdvi] = useState<number | null>(null);
+
+  function getLastValidIndex(timeline: { ndvi: number | null }[]) {
+    for (let i = timeline.length - 1; i >= 0; i--) {
+      if (typeof timeline[i].ndvi === "number") {
+        return timeline[i].ndvi;
+      }
+    }
+    return null;
+  }
+  const lastNdvi = getLastValidIndex(ndvi && Array.isArray(ndvi) ? ndvi : []);
 
   useEffect(() => {
+    //set Farm Profile
     const fetchFarmProfile = async () => {
       const {
         data: { user },
@@ -36,7 +62,7 @@ export default function CropHealth() {
       }
       const { data, error } = await supabase
         .from("farm_profiles")
-        .select("state, district, block, village, crop")
+        .select("state, district, block, village, crop , latitude, longitude")
         .eq("user_id", user.id)
         .single();
 
@@ -47,6 +73,8 @@ export default function CropHealth() {
           block: data.block ?? "",
           village: data.village ?? "",
           cropType: data.crop ?? "",
+          lat: data.latitude ?? "",
+          lon: data.longitude ?? "",
         });
       }
       setLoading(false);
@@ -55,28 +83,44 @@ export default function CropHealth() {
     fetchFarmProfile();
   }, []);
 
+  useEffect(() => {
+    //fetch NDVI NDWI
+    const fetchIndices = async () => {
+      if (!farmLocation) return;
+      try {
+        const res = await axios.post("/api/sentinel/indices", {
+          lat: farmLocation.lat,
+          lon: farmLocation.lon,
+        });
+        setNdvi(res.data.ndvi);
+        console.log(res.data.timeline);
+        // setNdwi(res.data.ndwi);
+      } catch (error) {
+        console.error("Error fetching indices:", error);
+      }
+    };
+    fetchIndices();
+  }, [farmLocation]);
+
   if (loading) {
     return (
       <>
         <Header />
 
         <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none"
-        />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
 
-        {/* Loader content */}
-        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-          <div className="h-16 w-16 flex items-center justify-center">
-            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
+          {/* Loader content */}
+          <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+            <div className="h-16 w-16 flex items-center justify-center">
+              <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
+            </div>
+
+            <p className="text-xl font-medium text-[#195733]">
+              Analyzing crop health data…
+            </p>
           </div>
-
-          <p className="text-xl font-medium text-[#195733]">
-           Analyzing crop health data…
-          </p>
-             
         </div>
-      </div>
       </>
     );
   }
@@ -188,7 +232,12 @@ export default function CropHealth() {
               {
                 icon: Leaf,
                 title: "Vegetation Health",
-                main: "NDVI: 0.68 (Normal)",
+                main: `NDVI: ${
+                  typeof lastNdvi === "number"
+                    ? lastNdvi.toFixed(2)
+                    : "Unavailable"
+                }`,
+
                 sub: "Trend: Stable",
                 note: "Based on last satellite pass",
               },

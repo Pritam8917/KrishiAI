@@ -12,22 +12,26 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 
+export type Location = {
+  state: string;
+  district: string;
+  block: string;
+  village: string;
+  latitude: number | null;
+  longitude: number | null;
+};
+
 export default function FarmSetup() {
   const router = useRouter();
 
   const [farmerName, setFarmerName] = useState("");
 
-  const [location, setLocation] = useState({
-    state: "",
-    district: "",
-    block: "",
-    village: "",
-  });
+  const [location, setLocation] = useState<Location | null>(null);
 
-  const [coordinates, setCoordinates] = useState<{
-    lat: number | null;
-    lon: number | null;
-  }>({ lat: null, lon: null });
+  // const [coordinates, setCoordinates] = useState<{
+  //   lat: number | null;
+  //   lon: number | null;
+  // }>({ lat: null, lon: null });
 
   const [cropInput, setCropInput] = useState({
     cropType: "",
@@ -36,17 +40,22 @@ export default function FarmSetup() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleLocationChange = (newLocation: Location) => {
+    setLocation(newLocation);
+  };
+
   /* -------------------- VALIDATION -------------------- */
   const canSaveFarm =
     farmerName.trim() !== "" &&
+    location !== null &&
     location.state !== "" &&
     location.district !== "" &&
-    location.block !== "" &&
-    location.village !== "" &&
+    // location.block !== "" &&
+    // location.village !== "" &&
+    location.latitude !== null &&
+    location.longitude !== null &&
     cropInput.cropType !== "" &&
-    cropInput.landSize > 0 &&
-    coordinates.lat !== null &&
-    coordinates.lon !== null;
+    cropInput.landSize > 0;
 
   /* -------------------- SAVE HANDLER -------------------- */
   const handleSaveFarm = async () => {
@@ -63,21 +72,19 @@ export default function FarmSetup() {
         return;
       }
 
+      if (!location) return;
       const { error } = await supabase.from("farm_profiles").upsert(
         {
           user_id: user.id,
           farmer_name: farmerName,
-          state: location.state,
-          district: location.district,
-          block: location.block,
-          village: location.village,
-          latitude: coordinates.lat,
-          longitude: coordinates.lon,
+          ...location,
           crop: cropInput.cropType,
           land_size: cropInput.landSize,
           land_unit: cropInput.landUnit,
         },
-        { onConflict: "user_id" }
+        {
+          onConflict: "user_id",
+        }
       );
 
       if (error) {
@@ -172,8 +179,7 @@ export default function FarmSetup() {
             <CardContent className="pt-6">
               <LocationSelector
                 location={location}
-                onLocationChange={setLocation}
-                onCoordinatesFound={(lat, lon) => setCoordinates({ lat, lon })}
+                onLocationChange={handleLocationChange}
               />
             </CardContent>
           </Card>
@@ -217,7 +223,11 @@ export default function FarmSetup() {
                 </>
               )}
             </Button>
-
+            {!canSaveFarm && (
+              <p className="text-sm text-red-500 text-center">
+                Please complete farm details to continue
+              </p>
+            )}
             <p className="mt-3 text-center text-sm text-gray-500">
               You can edit these details anytime from your profile
             </p>
