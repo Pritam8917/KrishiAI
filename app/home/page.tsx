@@ -1,10 +1,91 @@
 "use client";
+
 import { Button } from "@/app/components/ui/button";
 import { ArrowRight, Leaf, BarChart3, Satellite, Sparkles } from "lucide-react";
 import Header from "@/app/navbar/page";
+import {
+  motion,
+  type Variants,
+  useMotionValue,
+  animate,
+  useInView,
+} from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 
-export default  function HeroSection() {
+/* ===================== CountUp ===================== */
 
+interface CountUpProps {
+  to: number;
+  duration?: number;
+  suffix?: string;
+  start: boolean;
+}
+
+function CountUp({ to, duration = 1.5, suffix = "", start }: CountUpProps) {
+  const count = useMotionValue(0);
+  const [display, setDisplay] = useState("0");
+
+  useEffect(() => {
+    if (!start) return;
+
+    const controls = animate(count, to, {
+      duration,
+      onUpdate(latest) {
+        setDisplay(Math.round(latest).toString());
+      },
+    });
+
+    return controls.stop;
+  }, [start, to, duration, count]);
+
+  return (
+    <motion.span>
+      {display}
+      {suffix}
+    </motion.span>
+  );
+}
+
+/* ===================== Animations ===================== */
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
+
+const stagger: Variants = {
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const glowPulse: Variants = {
+  animate: {
+    boxShadow: [
+      "0 0 0px rgba(250,190,37,0)",
+      "0 0 45px rgba(250,190,37,0.45)",
+      "0 0 0px rgba(250,190,37,0)",
+    ],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+/* ===================== Component ===================== */
+
+export default function HeroSection() {
   const features = [
     { icon: Leaf, label: "Soil Analysis", color: "bg-amber-700" },
     { icon: BarChart3, label: "Yield Prediction", color: "bg-emerald-700" },
@@ -12,82 +93,102 @@ export default  function HeroSection() {
     { icon: Sparkles, label: "AI Recommendations", color: "bg-amber-500" },
   ];
 
+  /* 👇 Stats visibility detection */
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const statsInView = useInView(statsRef, { once: true });
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <Header/>
-      {/* Background Image */}
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-[url('/assets/hero-farm.jpg')] " />
+      <Header />
 
-      {/* Dark Overlay */}
+      {/* Background */}
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-[url('/assets/hero-farm.jpg')]" />
       <div className="absolute inset-0 bg-linear-to-br from-emerald-950/80 via-emerald-900/70 to-amber-900/60" />
 
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Floating blobs */}
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl animate-float" />
-        <div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
-        />
-        <div
-          className="absolute top-1/2 left-1/3 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl animate-float"
-          style={{ animationDelay: "4s" }}
-        />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl animate-float delay-2000" />
+        <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl animate-float delay-4000" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
-        <div className="max-w-4xl mx-auto text-center">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+          className="max-w-4xl mx-auto text-center"
+        >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white mb-8 animate-grow">
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full
+            bg-white/10 backdrop-blur-md border border-white/20 text-white mb-8"
+          >
             <Sparkles className="w-4 h-4 text-amber-400" />
             <span className="text-sm font-medium">
               AI-Powered Agriculture Intelligence
             </span>
-          </div>
+          </motion.div>
 
-          {/* Main Heading */}
-          <h1
-            className="font-display text-5xl md:text-7xl lg:text-7xl font-bold text-white mb-6 
-               leading-tight md:leading-none"
+          {/* Heading */}
+          <motion.h1
+            variants={fadeUp}
+            className="font-display text-5xl md:text-7xl font-bold text-white mb-6"
           >
             Smart Farming
             <span className="block text-amber-400">Starts Here</span>
-          </h1>
+          </motion.h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
+          <motion.p
+            variants={fadeUp}
+            transition={{ delay: 0.15 }}
+            className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10"
+          >
             Harness the power of AI, satellite imagery, and real-time data to
-            predict crop yields, optimize resources, and maximize your
-            farm&apos;s potential.
-          </p>
+            predict crop yields, optimize resources, and maximize your farm’s
+            potential.
+          </motion.p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
-            <Button
-              size="lg"
-              className="group bg-[#FABE25] hover:bg-[#cb9a20] text-black 
-               px-25 py-7 text-lg font-semibold rounded-xl cursor-pointer hover:-translate-y-1"
-            >
-              Start Free Analysis
-              <ArrowRight className="ml-2 w-6 h-6 transition-transform group-hover:translate-x-1" />
-            </Button>
+          {/* CTA */}
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col sm:flex-row justify-center gap-6 mb-16"
+          >
+            <motion.div variants={glowPulse} animate="animate" className="rounded-xl">
+              <Button
+                size="lg"
+                className="bg-[#FABE25] hover:bg-[#cb9a20] text-black
+                px-12 py-7 text-lg font-semibold rounded-xl
+                transition-all hover:-translate-y-1 hover:scale-[1.03] cursor-pointer w-full "
+              >
+                Start Free Analysis
+                <ArrowRight className="ml-2 w-6 h-6" />
+              </Button>
+            </motion.div>
 
             <Button
               variant="outline"
               size="lg"
               className="px-12 py-7 text-lg font-bold rounded-xl
-               text-white border-white/30 hover:bg-white/20 bg-[#95A592] hover:text-white  cursor-pointer"
+              text-white border-white/30 bg-[#95A592]
+              transition-all hover:-translate-y-1 hover:bg-white/20 cursor-pointer"
             >
               Watch Demo
             </Button>
-          </div>
+          </motion.div>
 
           {/* Feature Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white"
+                variants={fadeUp}
+                whileHover={{ y: -6, scale: 1.05 }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl
+                bg-white/10 backdrop-blur-md border border-white/10 text-white"
               >
                 <div
                   className={`w-8 h-8 rounded-lg ${feature.color} flex items-center justify-center`}
@@ -95,30 +196,43 @@ export default  function HeroSection() {
                   <feature.icon className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-medium">{feature.label}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Stats */}
-        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        {/* ===================== STATS ===================== */}
+        <motion.div
+          ref={statsRef}
+          variants={stagger}
+          initial="hidden"
+          animate={statsInView ? "visible" : "hidden"}
+          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+        >
           {[
-            { value: "98%", label: "Prediction Accuracy" },
-            { value: "50K+", label: "Farmers Served" },
-            { value: "15+", label: "Crop Types" },
-            { value: "24/7", label: "AI Monitoring" },
+            { value: 98, suffix: "%", label: "Prediction Accuracy" },
+            { value: 50, suffix: "K+", label: "Farmers Served" },
+            { value: 15, suffix: "+", label: "Crop Types" },
+            { value: 24, suffix: "/7", label: "AI Monitoring" },
           ].map((stat, index) => (
-            <div
+            <motion.div
               key={index}
-              className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/10"
+              variants={fadeUp}
+              whileHover={{ scale: 1.06 }}
+              className="text-center p-4 rounded-xl
+              bg-white/10 backdrop-blur-md border border-white/10"
             >
-              <div className="text-3xl md:text-4xl font-display font-bold text-amber-400 mb-1">
-                {stat.value}
+              <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-1">
+                <CountUp
+                  to={stat.value}
+                  suffix={stat.suffix}
+                  start={statsInView}
+                />
               </div>
               <div className="text-sm text-white/70">{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Scroll Indicator */}

@@ -15,6 +15,14 @@ export default function Loading() {
         <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-[#195733] to-emerald-700 flex items-center justify-center shadow-lg animate-pulse">
           🌱
         </div>
+
+        <p className="text-sm font-medium text-[#195733]">
+          Preparing Report a Problem…
+        </p>
+
+        <p className="text-xs text-gray-500">
+          Loading AI tools
+        </p>
       </div>
     </div>
   );

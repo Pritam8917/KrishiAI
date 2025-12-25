@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-
+import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import {
   Sprout,
-
   Leaf,
   X,
   Menu,
@@ -17,6 +16,46 @@ import {
   User,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+
+const mobileMenuVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    height: 0,
+  },
+  visible: {
+    opacity: 1,
+    height: "auto",
+    transition: {
+      duration: 0.25,
+      ease: [0.4, 0, 0.2, 1], // ✅ TS-safe easing
+      when: "beforeChildren" as const, // ✅ literal type
+      staggerChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    height: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
+
+const mobileItemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: -6,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
 
 export default function Header() {
   const router = useRouter();
@@ -47,7 +86,7 @@ export default function Header() {
       id: "problem",
       label: "Report Problem",
       icon: AlertTriangle,
-      href: "/reportAProblem",
+      href: "/currentproblem",
     },
     {
       id: "crophealth",
@@ -63,25 +102,21 @@ export default function Header() {
       ? "profile"
       : navItems.find(
           (item) =>
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/")
+            pathname === item.href || pathname.startsWith(item.href + "/")
         )?.id;
 
   /* ---------------- COMMON BUTTON STYLE ---------------- */
   const navBtnBase =
     "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer";
 
-  const navBtnInactive =
-    "text-[#1f643c] hover:text-black hover:bg-black/5";
+  const navBtnInactive = "text-[#1f643c] hover:text-black hover:bg-black/5";
 
-  const navBtnActive =
-    "bg-[#195733] text-white shadow-md";
+  const navBtnActive = "bg-[#195733] text-white shadow-md";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/10 px-6 md:px-10 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-
           {/* LOGO */}
           <div
             className="flex items-center gap-3 cursor-pointer"
@@ -112,9 +147,7 @@ export default function Header() {
                 onClick={() => router.push(item.href)}
                 className={cn(
                   navBtnBase,
-                  activeSection === item.id
-                    ? navBtnActive
-                    : navBtnInactive
+                  activeSection === item.id ? navBtnActive : navBtnInactive
                 )}
               >
                 <item.icon className="w-4 h-4" />
@@ -128,9 +161,7 @@ export default function Header() {
                 onClick={() => router.push("/auth/login")}
                 className={cn(
                   navBtnBase,
-                  activeSection === "login"
-                    ? navBtnActive
-                    : navBtnInactive
+                  activeSection === "login" ? navBtnActive : navBtnInactive
                 )}
               >
                 <LogIn className="w-4 h-4" />
@@ -141,9 +172,7 @@ export default function Header() {
                 onClick={() => router.push("/profile")}
                 className={cn(
                   navBtnBase,
-                  activeSection === "profile"
-                    ? navBtnActive
-                    : navBtnInactive
+                  activeSection === "profile" ? navBtnActive : navBtnInactive
                 )}
               >
                 <User className="w-4 h-4" />
@@ -152,20 +181,9 @@ export default function Header() {
             )}
           </nav>
 
-          {/* CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Button
-              size="lg"
-              className="bg-linear-to-br from-[#195733] to-emerald-700 text-white hover:-translate-y-1 font-semibold px-8 py-6 text-lg rounded-xl shadow-lg cursor-pointer transition-all"
-              onClick={() => router.push("/analysis")}
-            >
-              Start Analysis
-            </Button>
-          </div>
-
           {/* MOBILE MENU BUTTON */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-black/5"
+            className="lg:hidden p-2 rounded-lg hover:bg-black/5  cursor-pointer"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -177,54 +195,75 @@ export default function Header() {
         </div>
 
         {/* MOBILE MENU */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-black/10">
-            <nav className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    router.push(item.href);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    activeSection === item.id
-                      ? "bg-[#195733] text-white"
-                      : "text-[#1f643c] hover:bg-black/5"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </button>
-              ))}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              variants={mobileMenuVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="lg:hidden py-4 border-t border-black/10 overflow-hidden"
+            >
+              <nav className="flex flex-col gap-2">
+                {/* NAV ITEMS */}
+                {navItems.map((item) => (
+                  <motion.button
+                    key={item.id}
+                    variants={mobileItemVariants}
+                    onClick={() => {
+                      router.push(item.href);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      activeSection === item.id
+                        ? "bg-[#195733] text-white"
+                        : "text-[#1f643c] hover:bg-black/5"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.label}
+                  </motion.button>
+                ))}
 
-              {!user ? (
-                <button
-                  onClick={() => {
-                    router.push("/auth/login");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1f643c] hover:bg-black/5"
-                >
-                  <LogIn className="w-5 h-5" />
-                  Login
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    router.push("/profile");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1f643c] hover:bg-[#195733]/10"
-                >
-                  <User className="w-5 h-5" />
-                  Profile
-                </button>
-              )}
-            </nav>
-          </div>
-        )}
+                {/* DIVIDER */}
+                <div className="my-2 h-px bg-black/10" />
+
+                {/* LOGIN / PROFILE */}
+                {!user ? (
+                  <motion.button
+                    variants={mobileItemVariants}
+                    onClick={() => {
+                      router.push("/auth/login");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1f643c] hover:bg-black/5"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    Login
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    variants={mobileItemVariants}
+                    onClick={() => {
+                      router.push("/profile");
+                      setMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium",
+                      activeSection === "profile"
+                        ? "bg-[#195733] text-white"
+                        : "text-[#1f643c] hover:bg-black/5"
+                    )}
+                  >
+                    <User className="w-5 h-5" />
+                    Profile
+                  </motion.button>
+                )}
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

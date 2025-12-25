@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const to = new Date();
     const from = new Date();
 
-    from.setDate(to.getDate() - 10); // last 10 days
+    from.setDate(to.getDate() - 20); // last 20 days
 
     const response = await axios.post<SentinelStatsResponse>(
       STATS_URL,

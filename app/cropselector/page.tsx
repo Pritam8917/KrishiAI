@@ -145,7 +145,7 @@ export default function CropSelector({
 
         {/* RIGHT SIDE – Sowing Date */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Sowing Date</Label>
+          <Label className="text-sm font-medium">Sowing Date (optional)</Label>
 
           <div className="rounded-xl border bg-background p-2">
             <Calendar

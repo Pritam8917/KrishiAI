@@ -2,8 +2,7 @@ export const NDVI_NDWI_EVALSCRIPT = `
 //VERSION=3
 function setup() {
   return {
-    input: 
-       ["B04", "B08", "B03" ,"dataMask"],
+    input:  ["B04", "B08", "B03" ,"dataMask"],
     output: [
       { id: "ndvi", bands: 1 },
       { id: "ndwi", bands: 1 },
