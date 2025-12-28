@@ -58,11 +58,34 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Welcome back!");
-      await redirectAfterLogin(data.user.id);
+      console.error("Login error:", error);
+
+      switch (error.message) {
+        case "Invalid login credentials":
+          toast.error("Account not found or incorrect password");
+          // Optional redirect
+          router.push("/auth/signup");
+          break;
+
+        case "Email not confirmed":
+          toast.info("Please verify your email before logging in");
+          break;
+
+        case "Too many requests":
+          toast.error("Too many attempts. Please try again later");
+          break;
+
+        default:
+          toast.error("Something went wrong. Please try again");
+          break;
+      }
+
+      return;
     }
+
+    /* -------- SUCCESS -------- */
+    toast.success(`Welcome back ${data.user.email}!`);
+    await redirectAfterLogin(data.user.id);
   };
 
   /* -------------------- GOOGLE LOGIN -------------------- */
