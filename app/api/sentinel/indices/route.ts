@@ -7,10 +7,21 @@ const STATS_URL = "https://services.sentinel-hub.com/api/v1/statistics";
 
 /* ================= TYPES ================= */
 
-type SentinelBandStats = {
+type SentinelStats = {
   stats: {
-    mean: number | null;
-  } | null;
+    min: number;
+    max: number;
+    mean: number;
+    stDev: number;
+    sampleCount: number;
+    noDataCount: number;
+  };
+};
+
+type SentinelBand = {
+  bands: {
+    B0: SentinelStats;
+  };
 };
 
 type SentinelStatsItem = {
@@ -19,8 +30,8 @@ type SentinelStatsItem = {
     to: string;
   };
   outputs?: {
-    ndvi?: SentinelBandStats;
-    ndwi?: SentinelBandStats;
+    ndvi?: SentinelBand;
+    ndwi?: SentinelBand;
   };
 };
 
@@ -43,7 +54,7 @@ export async function POST(req: Request) {
     const token = await getSentinelToken();
 
     // Small farm area (~300–400m)
-    const delta = 0.00025;
+    const delta = 0.001;
 
     const to = new Date();
     const from = new Date();
@@ -69,7 +80,7 @@ export async function POST(req: Request) {
                   to: to.toISOString(),
                 },
                 mosaickingOrder: "leastCC",
-                maxCloudCoverage: 60,
+                maxCloudCoverage: 80,
               },
             },
           ],
@@ -80,7 +91,7 @@ export async function POST(req: Request) {
             from: from.toISOString(),
             to: to.toISOString(),
           },
-          aggregationInterval: { of: "P1D" }, // ✅ daily NDVI/NDWI
+          aggregationInterval: { of: "P5D" },
           evalscript: NDVI_NDWI_EVALSCRIPT,
         },
       },
@@ -99,15 +110,16 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+    console.log(JSON.stringify(response.data, null, 2));
 
     /* ================= PARSE RESULT ================= */
 
     const timeline = response.data.data.map((d) => ({
       date: d.interval.from,
-      ndvi: d.outputs?.ndvi?.stats?.mean ?? null,
-      ndwi: d.outputs?.ndwi?.stats?.mean ?? null,
+      ndvi: d.outputs?.ndvi?.bands?.B0?.stats?.mean ?? null,
+      ndwi: d.outputs?.ndwi?.bands?.B0?.stats?.mean ?? null,
     }));
-
+    
     return NextResponse.json({ timeline });
   } catch (err: unknown) {
     if (axios.isAxiosError(err)) {

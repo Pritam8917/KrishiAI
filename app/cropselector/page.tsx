@@ -25,26 +25,33 @@ export default function CropSelector({
   onCropInputChange,
 }: CropSelectorProps) {
   const CROP_TYPES = [
-    { name: "Rice", icon: "🌾", season: "Kharif" },
-    { name: "Wheat", icon: "🌾", season: "Rabi" },
-    { name: "Maize", icon: "🌽", season: "Kharif/Rabi" },
-    { name: "Cotton", icon: "☁️", season: "Kharif" },
-    { name: "Sugarcane", icon: "🎋", season: "Annual" },
-    { name: "Soybean", icon: "🫘", season: "Kharif" },
+    { name: "Apple", icon: "🍎", season: "Winter" },
+    { name: "Blueberry", icon: "🫐", season: "Spring/Summer" },
+    { name: "Banana", icon: "🍌", season: "Annual" },
+    { name: "Cherry", icon: "🍒", season: "Spring" },
+    { name: "Chilli", icon: "🌶️", season: "Kharif/Rabi" },
+    { name: "Chickpea", icon: "🫘", season: "Rabi" },
+    { name: "Coconut", icon: "🥥", season: "Annual" },
+    { name: "Ginger", icon: "🫚", season: "Kharif" },
+    { name: "Grapes", icon: "🍇", season: "Winter" },
     { name: "Groundnut", icon: "🥜", season: "Kharif/Rabi" },
     { name: "Mustard", icon: "🌻", season: "Rabi" },
-    { name: "Potato", icon: "🥔", season: "Rabi" },
-    { name: "Onion", icon: "🧅", season: "Rabi" },
-    { name: "Tomato", icon: "🍅", season: "Rabi/Kharif" },
-    { name: "Chickpea", icon: "🫘", season: "Rabi" },
-    { name: "Pigeon Pea", icon: "🫛", season: "Kharif" },
+    { name: "Maize", icon: "🌽", season: "Kharif/Rabi" },
     { name: "Millet", icon: "🌾", season: "Kharif" },
-    { name: "Sorghum", icon: "🌾", season: "Kharif/Rabi" },
-    { name: "Banana", icon: "🍌", season: "Annual" },
     { name: "Mango", icon: "🥭", season: "Summer" },
+    { name: "Orange", icon: "🍊", season: "Winter" },
+    { name: "Onion", icon: "🧅", season: "Rabi" },
+    { name: "Potato", icon: "🥔", season: "Rabi" },
+    { name: "Pigeon Pea", icon: "🫛", season: "Kharif" },
+    { name: "Rice", icon: "🌾", season: "Kharif" },
+    { name: "Sugarcane", icon: "🎋", season: "Annual" },
+    { name: "Sunflower", icon: "🌻", season: "Kharif/Rabi" },
+    { name: "Strawberry", icon: "🍓", season: "Rabi/Kharif" },
+    { name: "Soybean", icon: "🫘", season: "Kharif" },
+    { name: "Sorghum", icon: "🌾", season: "Kharif/Rabi" },
+    { name: "Tomato", icon: "🍅", season: "Rabi/Kharif" },
     { name: "Turmeric", icon: "🟡", season: "Kharif" },
-    { name: "Ginger", icon: "🫚", season: "Kharif" },
-    { name: "Chilli", icon: "🌶️", season: "Kharif/Rabi" },
+    { name: "Wheat", icon: "🌾", season: "Rabi" },
   ];
   return (
     <div className="space-y-6">
@@ -151,7 +158,6 @@ export default function CropSelector({
             <Calendar
               mode="single"
               selected={cropInput.sowingDate}
-             
               onSelect={(date) =>
                 onCropInputChange({ ...cropInput, sowingDate: date })
               }

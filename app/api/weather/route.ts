@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const lat = searchParams.get("lat");
     const lon = searchParams.get("lon");
 
-    // ✅ Validate inputs
+    //  Validate inputs
     if (!lat || !lon) {
       return NextResponse.json(
         { error: "Latitude and longitude are required" },
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // ✅ SAFE single-line URL
+    //  Fetch weather data from Open-Meteo
     const url =
       `https://api.open-meteo.com/v1/forecast` +
       `?latitude=${latitude}` +

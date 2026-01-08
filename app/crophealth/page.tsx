@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -12,6 +11,7 @@ import {
   CloudRain,
   AlertTriangle,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import axios from "axios";
@@ -19,6 +19,7 @@ import Header from "@/app/navbar/page";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+
 //  AI LOGIC (pure functions)
 import {
   getWaterStress,
@@ -33,11 +34,13 @@ const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 };
+const InlineLoader = () => (
+  <Loader2 className="w-5 h-5 animate-spin text-white/80" />
+);
 
 export default function CropHealth() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-
   const [farm, setFarm] = useState<FarmProfile | null>(null);
   const [ndvi, setNdvi] = useState<number | null>(null);
   const [ndwi, setNdwi] = useState<number | null>(null);
@@ -64,7 +67,7 @@ export default function CropHealth() {
 
   /* ================= FETCH SATELLITE ================= */
   useEffect(() => {
-    if (!farm?.latitude) return;
+    if (!farm?.latitude || !farm?.longitude) return;
 
     axios
       .post("/api/sentinel/indices", {
@@ -72,9 +75,13 @@ export default function CropHealth() {
         lon: farm.longitude,
       })
       .then((res) => {
-        setNdvi(res.data.ndvi);
-        setNdwi(res.data.ndwi);
-      });
+        const timeline = res.data.timeline;
+        if (!timeline?.length) return;
+        const latest = timeline[timeline.length - 1];
+        setNdvi(latest.ndvi);
+        setNdwi(latest.ndwi);
+      })
+      .catch(console.error);
   }, [farm]);
 
   /* ================= FETCH WEATHER================= */
@@ -102,40 +109,45 @@ export default function CropHealth() {
     : undefined; // Max wind speed
 
   /* ================= AI DECISIONS ================= */
+
   // Vegetation Status
-  const vegetation = typeof ndvi === "number" ? getVegetationStatus(ndvi) : "—";
+  const vegetation =
+    ndvi === null ? <InlineLoader /> : getVegetationStatus(ndvi);
 
   // Water Stress
   const waterStress =
-    typeof ndwi === "number" && typeof rain14d === "number"
-      ? getWaterStress({
-          ndwi,
-          rain14d,
-          windSpeed: typeof windSpeed === "number" ? windSpeed : undefined,
-        })
-      : "—";
+    ndwi === null || weather === null ? (
+      <InlineLoader />
+    ) : (
+      getWaterStress({
+        ndwi,
+        rain14d,
+        windSpeed: typeof windSpeed === "number" ? windSpeed : undefined,
+      })
+    );
 
   // Leaching Risk
   const leachingRisk =
-    typeof rain7d === "number" && typeof ndvi === "number"
-      ? getLeachingRisk({ rain7d, ndvi })
-      : "—";
+    ndvi === null || weather === null ? (
+      <InlineLoader />
+    ) : (
+      getLeachingRisk({ rain7d, ndvi })
+    );
 
   // Disease Risk
   const diseaseRisk =
-    typeof avgHumidity === "number" &&
-    typeof maxTemp === "number" &&
-    typeof rain7d === "number" &&
-    typeof ndvi === "number"
-      ? getDiseaseRisk({
-          humidity: avgHumidity,
-          temp: maxTemp,
-          rainDays:
-            weather?.daily.precipitation_sum?.slice(-7).filter((r) => r >= 1)
-              .length ?? 0,
-          ndvi,
-        })
-      : "—";
+    ndvi === null || weather === null ? (
+      <InlineLoader />
+    ) : (
+      getDiseaseRisk({
+        humidity: avgHumidity,
+        temp: maxTemp,
+        rainDays:
+          weather?.daily.precipitation_sum?.slice(-7).filter((r) => r >= 1)
+            .length ?? 0,
+        ndvi,
+      })
+    );
 
   if (loading) {
     return (
@@ -220,7 +232,7 @@ export default function CropHealth() {
                   <div>
                     <p className="text-xs opacity-80">NDVI</p>
                     <p className="text-xl font-semibold">
-                      {typeof ndvi === "number" ? ndvi.toFixed(2) : "—"}
+                      {ndvi === null ? <InlineLoader /> : ndvi.toFixed(2)}
                     </p>
                   </div>
                   <div>
@@ -276,6 +288,7 @@ export default function CropHealth() {
             <Insight title="Leaching Risk" value={leachingRisk} />
             <Insight title="Disease Risk" value={diseaseRisk} />
           </div>
+          
           {/* ================= WEATHER IMPACT ================= */}
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <Card className="border-l-4 border-sky-600 bg-[#F4FAFF]">
@@ -468,8 +481,12 @@ export default function CropHealth() {
     </>
   );
 }
+type InsightProps = {
+  title: string;
+  value: React.ReactNode;
+};
 
-function Insight({ title, value }: { title: string; value: string }) {
+export function Insight({ title, value }: InsightProps) {
   return (
     <Card>
       <CardContent className="py-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
 import {
@@ -11,13 +11,15 @@ import {
   ThermometerSun,
   Image as ImageIcon,
   ArrowRight,
+  Sprout,
 } from "lucide-react";
-
+// import Image from "next/image";
 import Header from "@/app/navbar/page";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Textarea } from "@/app/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
 
 /* ================= Animations ================= */
 
@@ -56,11 +58,83 @@ const symptoms = [
 export default function ReportAProblem() {
   const router = useRouter();
 
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [severity, setSeverity] = useState<"low" | "medium" | "high" | null>(
     null
   );
   const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data?.user) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      setCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `report-${Date.now()}.${fileExt}`;
+    const filePath = `issues/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("crop_reports")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) {
+      setUploading(false);
+      throw error;
+    }
+
+    const { data } = supabase.storage
+      .from("crop_reports")
+      .getPublicUrl(filePath);
+
+    setUploading(false);
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async () => {
+    try {
+      let imageUrl: string | null = null;
+
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) return;
+
+      const { error } = await supabase.from("crop_reports").insert({
+        user_id: data.user.id,
+        symptoms: selectedSymptoms,
+        severity,
+        description,
+        image_url: imageUrl, // ← NOT image itself
+      });
+      if (error) {
+        throw error;
+      }
+      router.push("/crophealth");
+    } catch (err) {
+      console.error(err);
+      alert("Image upload failed. Try again.");
+    }
+  };
 
   const toggleSymptom = (id: string) => {
     setSelectedSymptoms((prev) =>
@@ -69,6 +143,18 @@ export default function ReportAProblem() {
   };
 
   const canSubmit = selectedSymptoms.length > 0 && severity !== null;
+  if (checkingAuth) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+          <div className="h-16 w-16 flex items-center justify-center">
+            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -174,15 +260,26 @@ export default function ReportAProblem() {
               </div>
 
               {/* -------- Image Upload -------- */}
-              <div>
-                <h3 className="font-semibold mb-2 text-[#195733]">
-                  Upload photo
-                </h3>
+              <div className="border-2 border-dashed border-[#DDE9E2] rounded-xl p-6 text-center text-sm text-gray-600">
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="imageUpload"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setImageFile(file);
+                  }}
+                />
 
-                <div className="border-2 border-dashed border-[#DDE9E2] rounded-xl p-6 text-center text-sm text-gray-600">
-                  <ImageIcon className="mx-auto mb-2 w-6 h-6" />
-                  Image upload coming soon
-                </div>
+                <label
+                  htmlFor="imageUpload"
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <ImageIcon className="mb-2 w-6 h-6" />
+                  {imageFile ? "Change image" : "Upload crop image"}
+                </label>
               </div>
 
               {/* -------- AI INFO -------- */}
@@ -207,8 +304,8 @@ export default function ReportAProblem() {
               {/* -------- CTA -------- */}
               <motion.div whileHover={{ scale: canSubmit ? 1.02 : 1 }}>
                 <Button
-                  disabled={!canSubmit}
-                  onClick={() => router.push("/crophealth")}
+                  disabled={!canSubmit || uploading}
+                  onClick={handleSubmit}
                   className={cn(
                     "w-full py-6 text-base sm:text-lg font-semibold rounded-xl flex items-center justify-center gap-2",
                     canSubmit
@@ -216,7 +313,7 @@ export default function ReportAProblem() {
                       : "bg-gray-300 cursor-not-allowed"
                   )}
                 >
-                  Get AI Analysis
+                  {uploading ? "Uploading..." : "Get AI Analysis"}
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </motion.div>
