@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
-    console.log(JSON.stringify(response.data, null, 2));
+ 
 
     /* ================= PARSE RESULT ================= */
 
