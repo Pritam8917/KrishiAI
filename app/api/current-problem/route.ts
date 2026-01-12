@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const blob = new Blob([buffer]);
   formData.append("image", blob, "leaf.jpg");
 
-  // Call FastAPI
+  // Call FastAPI / Integration of Nextjs server with Fastapi server
   const mlRes = await axios.post("http://localhost:8000/predict", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
