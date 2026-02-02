@@ -51,7 +51,7 @@ transform = transforms.Compose([
 ])
 
 # ---------------- API ----------------
-@app.post("/predict")
+@app.post("/problem")
 
 async def predict(image: UploadFile = File(...)): # Receive image file
     image_bytes = await image.read()

@@ -104,7 +104,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 # ---------------- TRAINING ----------------
 for epoch in range(EPOCHS):
     print(f"\n🚀 Starting Epoch {epoch + 1}/{EPOCHS}")
-    model.train()
+    model.train() # set to training mode
     train_loss = 0.0
 
     for batch_idx, (imgs, labels) in enumerate(train_loader):
@@ -114,7 +114,7 @@ for epoch in range(EPOCHS):
             print(f"   ...Processed {batch_idx * BATCH_SIZE} images")
             
         imgs, labels = imgs.to(device), labels.to(device)
-
+    
         optimizer.zero_grad()
         outputs = model(imgs)
         loss = criterion(outputs, labels)

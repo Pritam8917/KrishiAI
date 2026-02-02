@@ -4,10 +4,12 @@ import OpenAI from "openai";
 import { MANUAL_SUGGESTIONS } from "@/lib/manual_suggestions";
 import { createClient } from "@supabase/supabase-js";
 
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
@@ -38,28 +40,18 @@ export async function POST(req: Request) {
 
     /* ---------- Send to FastAPI ---------- */
     const formData = new FormData();
-    formData.append("image", new Blob([buffer]), "leaf.jpg");
-
-    const mlRes = await axios.post("http://127.0.0.1:8000/predict", formData);
-
+    formData.append("image", new Blob([buffer]), "leaf.jpg"); //FormData → multipart/form-data → FastAPI UploadFile
+    const mlRes = await axios.post("http://127.0.0.1:8000/problem", formData); 
     const { prediction, confidence } = mlRes.data;
 
     /* ---------- OpenAI suggestions ---------- */
     let aiSuggestions: string | null = null;
-
     try {
-      const prompt = `
-A plant disease has been detected.
-
-Disease: ${prediction}
-Confidence: ${confidence}%
-
-Provide:
-- General control measures
-- Common pesticide names (NO dosage)
-- Short farmer-friendly advice
-- Add a safety disclaimer
-`;
+      const prompt = `A plant disease has been detected.Disease: ${prediction} Confidence: ${confidence}%
+                      Provide: - General control measures
+                               - Common pesticide names (NO dosage)
+                               - Short farmer-friendly advice
+                               - Add a safety disclaimer at the end.`;
 
       const aiRes = await openai.chat.completions.create({
         model: "gpt-4o-mini",
