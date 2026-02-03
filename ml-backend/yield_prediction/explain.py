@@ -1,5 +1,4 @@
-from predict import predict_yield
-
+from model_utils import predict_yield
 
 def explain_yield_drivers(data):
     reasons = []
@@ -17,8 +16,6 @@ def explain_yield_drivers(data):
         reasons.append("Weather and crop health indicators are favorable.")
 
     return reasons
-
-
 def simulate_improvement(data):
     improved = data.copy()
 
@@ -26,7 +23,6 @@ def simulate_improvement(data):
         improved["ndwi"] = 0.45
 
     return predict_yield(improved)
-
 
 def yield_confidence(yield_value):
     margin = yield_value * 0.07

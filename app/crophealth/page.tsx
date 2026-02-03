@@ -40,6 +40,7 @@ const InlineLoader = () => (
 
 export default function CropHealth() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [farm, setFarm] = useState<FarmProfile | null>(null);
   const [ndvi, setNdvi] = useState<number | null>(null);
@@ -52,10 +53,13 @@ export default function CropHealth() {
       const { data } = await supabase.auth.getUser();
       if (!data?.user) return setLoading(false);
 
+      const userID = data.user?.id;
+      setUserId(userID);
+
       const { data: farmData } = await supabase
         .from("farm_profiles")
         .select("state,district,village,crop,latitude,longitude")
-        .eq("user_id", data.user.id)
+        .eq("user_id", userID)
         .single();
 
       setFarm(farmData);
@@ -93,11 +97,9 @@ export default function CropHealth() {
   }, [farm]);
 
   /* ================= EXTRACT NUMBERS ================= */
-  const rain7d =
-    weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0; // Last 7 days rainfall
+  const rain7d = weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0; // Last 7 days rainfall
 
-  const rain14d =
-    weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0; // Last 14 days rainfall
+  const rain14d = weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0; // Last 14 days rainfall
 
   const maxTemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0; // Max temperature
 
@@ -107,6 +109,26 @@ export default function CropHealth() {
   const windSpeed = weather
     ? Math.max(...weather.daily.wind_speed_10m_max)
     : undefined; // Max wind speed
+  
+  useEffect(() => {
+    if (!ndvi || !ndwi || !weather) return;
+
+    const sendToAI = async () => {
+      const res = await axios.post(`http://localhost:8000/predict-yield/${userId}`, {
+        rain7d,
+        rain14d,
+        maxTemp,
+        humidity: avgHumidity,
+        windSpeed,
+        ndvi,
+        ndwi,
+      });
+
+      console.log("AI Advisory:", res.data);
+    };
+
+    sendToAI();
+  }, [ndvi, ndwi, weather, rain7d, rain14d, maxTemp, avgHumidity, windSpeed,userId]);
 
   /* ================= AI DECISIONS ================= */
 
@@ -288,7 +310,7 @@ export default function CropHealth() {
             <Insight title="Leaching Risk" value={leachingRisk} />
             <Insight title="Disease Risk" value={diseaseRisk} />
           </div>
-          
+
           {/* ================= WEATHER IMPACT ================= */}
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
             <Card className="border-l-4 border-sky-600 bg-[#F4FAFF]">
@@ -322,15 +344,15 @@ export default function CropHealth() {
                         rain7d > 60
                           ? "text-red-600"
                           : rain7d < 15
-                          ? "text-amber-600"
-                          : "text-green-600"
+                            ? "text-amber-600"
+                            : "text-green-600"
                       }`}
                     >
                       {rain7d > 60
                         ? "Excess rainfall → nutrient leaching risk"
                         : rain7d < 15
-                        ? "Low rainfall → possible water stress"
-                        : "Rainfall within optimal range"}
+                          ? "Low rainfall → possible water stress"
+                          : "Rainfall within optimal range"}
                     </p>
                   </div>
 

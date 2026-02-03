@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 
-from model import predict_yield
+from model_utils import predict_yield
 from explain import explain_yield_drivers, simulate_improvement, yield_confidence
 from recommendations import generate_farmer_advice
 
@@ -55,6 +55,7 @@ def fetch_user_farm_data(user_id: str):
 # API Endpoint
 # -----------------------------
 @app.post("/predict-yield/{user_id}")
+
 def predict_yield_and_advisory(user_id: str, advisory: AdvisoryInput):
 
     farm_data = fetch_user_farm_data(user_id)
@@ -64,7 +65,7 @@ def predict_yield_and_advisory(user_id: str, advisory: AdvisoryInput):
     if farm_data["land_size"] <= 0:
         raise HTTPException(status_code=400, detail="Invalid farm size")
 
-    # 🔹 Merge ML input
+    # Merge ML input
     model_input = {
         "rain7d": advisory.rain7d,
         "rain14d": advisory.rain14d,

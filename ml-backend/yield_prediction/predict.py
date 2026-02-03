@@ -1,52 +1,38 @@
 import joblib
 import pandas as pd
-
 from explain import explain_yield_drivers, simulate_improvement, yield_confidence
 from recommendations import generate_farmer_advice
 
-# -----------------------------
-# Load trained model
-# -----------------------------
-bundle = joblib.load("yield_model.pkl")
-model = bundle["model"]
-encoders = bundle["encoders"]
-FEATURES = bundle["features"]
+# Load full pipeline
+pipe = joblib.load("model/yield_model.pkl")
 
-# -----------------------------
-# Example FARM input (yield model)
-# -----------------------------
+# Example FARM input
 farm_data = {
     "crop_name": "Rice",
     "season": "Kharif",
     "district_name": "Cuttack",
-    "area": 2.5
+    "area": 2.5,
+    "rain7d": 42,
+    "ndvi": 0.52,
+    "ndwi": 0.18,
+    "humidity": 78,
+    "maxTemp": 34
 }
+
 
 df = pd.DataFrame([farm_data])
 
-# Encode categorical values
-for col, encoder in encoders.items():
-    df[col] = encoder.transform(df[col])
-
-# -----------------------------
-# 1️⃣ Yield Prediction
-# -----------------------------
-predicted_yield = float(model.predict(df[FEATURES])[0])
+# 1️⃣ Yield Prediction (NO manual encoding)
+predicted_yield = float(pipe.predict(df)[0])
 low, high = yield_confidence(predicted_yield)
 
-# -----------------------------
 # 2️⃣ Explain yield drivers
-# -----------------------------
 yield_explanation = explain_yield_drivers(farm_data)
 
-# -----------------------------
 # 3️⃣ Yield improvement simulation
-# -----------------------------
 potential_yield = simulate_improvement(farm_data)
 
-# -----------------------------
-# 4️⃣ Advisory input (mock real-time data)
-# -----------------------------
+# 4️⃣ Advisory input
 weather_data = {
     "ndvi": 0.52,
     "ndwi": 0.18,
@@ -64,9 +50,7 @@ advisory = generate_farmer_advice(
     crop_type=farm_data["crop_name"]
 )
 
-# -----------------------------
-# 5️⃣ Final API-like response
-# -----------------------------
+# 5️⃣ Final response
 response = {
     "yield_forecast": {
         "predicted_yield": round(predicted_yield, 2),
@@ -78,6 +62,5 @@ response = {
     "farmer_advisory": advisory
 }
 
-# Pretty print
 import json
 print(json.dumps(response, indent=2))

@@ -1,4 +1,4 @@
-#local test file for prediction function
+# local test file for prediction function
 import torch
 from torchvision import models, transforms
 from PIL import Image
