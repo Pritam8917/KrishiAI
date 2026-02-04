@@ -9,7 +9,6 @@ pipe = joblib.load("model/yield_model.pkl")
 # Example FARM input
 farm_data = {
     "crop_name": "Rice",
-    "season": "Kharif",
     "district_name": "Cuttack",
     "area": 2.5,
     "rain7d": 42,

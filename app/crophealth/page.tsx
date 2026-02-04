@@ -97,38 +97,56 @@ export default function CropHealth() {
   }, [farm]);
 
   /* ================= EXTRACT NUMBERS ================= */
-  const rain7d = weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0; // Last 7 days rainfall
+  const rain7d =
+    weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0; // Last 7 days rainfall
 
-  const rain14d = weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0; // Last 14 days rainfall
+  const rain14d =
+    weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0; // Last 14 days rainfall
 
-  const maxTemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0; // Max temperature
+  const maxtemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0; // Max temperature
 
   const avgHumidity = weather
     ? Math.max(...weather.daily.relative_humidity_2m_mean)
     : 0; // Avg humidity
-  const windSpeed = weather
+  const windspeed = weather
     ? Math.max(...weather.daily.wind_speed_10m_max)
     : undefined; // Max wind speed
-  
+
   useEffect(() => {
     if (!ndvi || !ndwi || !weather) return;
 
     const sendToAI = async () => {
-      const res = await axios.post(`http://localhost:8000/predict-yield/${userId}`, {
+      const payload = {
+        user_id: userId,
         rain7d,
         rain14d,
-        maxTemp,
+        maxtemp,
         humidity: avgHumidity,
-        windSpeed,
+        windspeed,
         ndvi,
         ndwi,
-      });
+      };
+
+      // SEND TO FASTAPI
+      const res = await axios.post(
+        "http://127.0.0.1:8000/predict-yield",
+        payload,
+      );
 
       console.log("AI Advisory:", res.data);
     };
-
     sendToAI();
-  }, [ndvi, ndwi, weather, rain7d, rain14d, maxTemp, avgHumidity, windSpeed,userId]);
+  }, [
+    ndvi,
+    ndwi,
+    weather,
+    rain7d,
+    rain14d,
+    maxtemp,
+    avgHumidity,
+    windspeed,
+    userId,
+  ]);
 
   /* ================= AI DECISIONS ================= */
 
@@ -144,7 +162,7 @@ export default function CropHealth() {
       getWaterStress({
         ndwi,
         rain14d,
-        windSpeed: typeof windSpeed === "number" ? windSpeed : undefined,
+        windSpeed: typeof windspeed === "number" ? windspeed : undefined,
       })
     );
 
@@ -163,7 +181,7 @@ export default function CropHealth() {
     ) : (
       getDiseaseRisk({
         humidity: avgHumidity,
-        temp: maxTemp,
+        temp: maxtemp,
         rainDays:
           weather?.daily.precipitation_sum?.slice(-7).filter((r) => r >= 1)
             .length ?? 0,
@@ -362,10 +380,10 @@ export default function CropHealth() {
 
                     <p className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                       <span className="text-gray-800">
-                        {maxTemp.toFixed(1)} °C
+                        {maxtemp.toFixed(1)} °C
                       </span>
 
-                      {maxTemp > 35 ? (
+                      {maxtemp > 35 ? (
                         <AlertTriangle className="w-4 h-4 text-red-600" />
                       ) : (
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -374,10 +392,10 @@ export default function CropHealth() {
 
                     <p
                       className={`text-xs sm:text-sm mt-1 ${
-                        maxTemp > 35 ? "text-red-600" : "text-green-600"
+                        maxtemp > 35 ? "text-red-600" : "text-green-600"
                       }`}
                     >
-                      {maxTemp > 35
+                      {maxtemp > 35
                         ? "High temperature → heat stress risk"
                         : "Temperature suitable for crop growth"}
                     </p>
@@ -411,15 +429,15 @@ export default function CropHealth() {
                   </div>
 
                   {/* 🌬️ Wind Speed */}
-                  {windSpeed !== undefined && (
+                  {windspeed !== undefined && (
                     <div className="space-y-1">
                       <p className="text-gray-500">Wind Speed (Max)</p>
                       <p className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                         <span className="text-gray-800">
-                          {windSpeed.toFixed(1)} km/h
+                          {windspeed.toFixed(1)} km/h
                         </span>
 
-                        {windSpeed > 25 ? (
+                        {windspeed > 25 ? (
                           <AlertTriangle className="w-4 h-4 text-amber-600" />
                         ) : (
                           <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -428,10 +446,10 @@ export default function CropHealth() {
 
                       <p
                         className={`text-xs sm:text-sm mt-1 ${
-                          windSpeed > 25 ? "text-amber-600" : "text-green-600"
+                          windspeed > 25 ? "text-amber-600" : "text-green-600"
                         }`}
                       >
-                        {windSpeed > 25
+                        {windspeed > 25
                           ? "Strong wind → higher evaporation risk"
                           : "Wind conditions are normal"}
                       </p>

@@ -12,11 +12,11 @@ from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 # Load dataset
 df = pd.read_csv("dataset/crop_production.csv")
 df.columns = df.columns.str.lower()
-df = df[["crop_name", "season", "district_name", "area", "yield"]].dropna()
+df = df[["crop_name", "district_name", "area", "yield"]].dropna()
 df = df[df["area"] > 0]
 
 # Features
-FEATURES = ["crop_name", "season", "district_name", "area"]
+FEATURES = ["crop_name", "district_name", "area"]
 X = df[FEATURES]
 y = df["yield"]
 
@@ -26,7 +26,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Preprocessing
-categorical_cols = ["crop_name", "season", "district_name"]
+categorical_cols = ["crop_name", "district_name"]
 numerical_cols = ["area"]
 
 preprocessor = ColumnTransformer(

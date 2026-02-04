@@ -10,7 +10,10 @@ import {
   animate,
   useInView,
 } from "framer-motion";
+
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+
 
 /* ===================== CountUp ===================== */
 
@@ -96,7 +99,7 @@ export default function HeroSection() {
   /* 👇 Stats visibility detection */
   const statsRef = useRef<HTMLDivElement | null>(null);
   const statsInView = useInView(statsRef, { once: true });
-
+  const router = useRouter();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <Header />
@@ -163,6 +166,7 @@ export default function HeroSection() {
                 className="bg-[#FABE25] hover:bg-[#cb9a20] text-black
                 px-12 py-7 text-lg font-semibold rounded-xl
                 transition-all hover:-translate-y-1 hover:scale-[1.03] cursor-pointer w-full "
+                onClick={() => router.push("/start-prediction")}
               >
                 Start Free Analysis
                 <ArrowRight className="ml-2 w-6 h-6" />

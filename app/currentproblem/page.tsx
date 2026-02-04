@@ -330,7 +330,7 @@ export default function ReportProblemPage() {
                 disabled={!canSubmit || analyzing || uploading}
                 onClick={handleSubmit}
                 className={cn(
-                  `w-full py-6 text-lg font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all duration-300`,
+                  `w-full py-6 text-lg font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer`,
                   canSubmit
                     ? "bg-linear-to-r from-[#195733] to-[#2FA36B] text-white shadow-lg hover:shadow-xl"
                     : "bg-gray-300 text-gray-600 cursor-not-allowed"

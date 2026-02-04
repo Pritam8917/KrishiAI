@@ -1,4 +1,10 @@
 def infer_growth_stage(ndvi: float) -> str:
+    """
+    Estimate crop growth stage using NDVI.
+    """
+    if ndvi is None:
+        return "unknown"
+
     if ndvi < 0.35:
         return "early_growth"
     elif ndvi < 0.6:
@@ -18,11 +24,19 @@ def generate_farmer_advice(
     advice = []
     priority_actions = []
     do_not_do = []
-    
-    # 🌾 Growth Stage Detection
+
+    # ---------- SAFETY CAST ----------
+    ndvi = float(ndvi or 0)
+    ndwi = float(ndwi or 0)
+    rain7d = float(rain7d or 0)
+    maxTemp = float(maxTemp or 0)
+    humidity = float(humidity or 0)
+    crop_type = (crop_type or "").lower()
+
+    # ---------- Growth Stage ----------
     stage = infer_growth_stage(ndvi)
 
-    # 🌧️ Water Stress & Irrigation
+    # ---------- Water Stress ----------
     if ndwi < 0.2:
         priority_actions.append(
             "Provide light irrigation during early morning or evening"
@@ -42,96 +56,123 @@ def generate_farmer_advice(
             "Do not over-irrigate after heavy rainfall"
         )
 
-    # 🌱 Fertilizer Recommendations
+    # ---------- Fertilizer (Farmer Friendly) ----------
     if stage == "early_growth":
         advice.append(
-            "🌱 Crop is in early growth stage. Nitrogen helps in leaf and stem development."
+            "🌱 Early growth: Crop needs nitrogen and phosphorus for root and leaf growth."
         )
         priority_actions.append(
-            "Apply nitrogen fertilizer after irrigation"
+            "Apply Urea 20–25 kg/acre + DAP 10–12 kg/acre after irrigation"
         )
         do_not_do.append(
-            "Do not apply heavy fertilizer before irrigation"
+            "Do not apply fertilizer on dry soil"
         )
 
     elif stage == "vegetative":
         advice.append(
-            "🌿 Crop is in vegetative stage. Balanced nutrition supports biomass and tiller formation."
+            "🌿 Vegetative stage: Balanced nutrients increase plant height and tillers."
         )
         priority_actions.append(
-            "Apply balanced NPK fertilizer"
+            "Apply 19:19:19 NPK @ 10 kg/acre (soil or foliar)"
         )
         do_not_do.append(
-            "Do not apply excess nitrogen at this stage"
+            "Do not overuse urea at this stage"
         )
 
-    else:  # reproductive
+    elif stage == "reproductive":
         advice.append(
-            "🌾 Crop is in reproductive stage. Potassium helps improve grain quality and stress tolerance."
+            "🌾 Flowering/grain stage: Potassium improves grain size and quality."
         )
         priority_actions.append(
-            "Ensure adequate potassium availability"
+            "Apply MOP (Potash) 8–10 kg/acre or SOP 5 kg/acre"
         )
         do_not_do.append(
-            "Avoid excess nitrogen during flowering and grain filling"
+            "Avoid nitrogen-heavy fertilizer during flowering"
         )
 
-
-    # 🌾 Crop-Specific Notes
-
-    crop = crop_type.lower()
-
-    if crop == "rice":
+    # ---------- NDVI Nutrient Stress ----------
+    if ndvi < 0.4:
         advice.append(
-            "🌾 Rice advisory: Split nitrogen application during tillering improves yield response."
+            "📉 Low crop greenness detected. Indicates nutrient deficiency."
         )
-    elif crop == "wheat":
-        advice.append(
-            "🌾 Wheat advisory: Balanced nutrition supports grain filling and reduces lodging risk."
-        )
-    elif crop == "maize":
-        advice.append(
-            "🌽 Maize advisory: Nitrogen availability during early growth and knee-high stage is important."
+        priority_actions.append(
+            "Spray micronutrient mixture or 2% urea foliar spray"
         )
 
-    # ☀️ Heat Stress Management
+    # ---------- Rain Leaching ----------
+    if rain7d > 60:
+        advice.append(
+            "🌧️ Heavy rainfall may wash away nutrients."
+        )
+        priority_actions.append(
+            "Apply light split dose of urea (10 kg/acre)"
+        )
+
+    # ---------- Crop Specific ----------
+    if crop_type == "rice":
+        advice.append(
+            "🌾 Rice advisory: Nitrogen split application improves tillering."
+        )
+        priority_actions.append(
+            "Apply Urea in 3 splits (basal, tillering, panicle)"
+        )
+
+    elif crop_type == "wheat":
+        advice.append(
+            "🌾 Wheat advisory: Nitrogen at CRI stage increases grain yield."
+        )
+        priority_actions.append(
+            "Apply Urea 25 kg/acre at CRI stage"
+        )
+
+    elif crop_type == "maize":
+        advice.append(
+            "🌽 Maize advisory: Nitrogen is critical at knee-high stage."
+        )
+        priority_actions.append(
+            "Apply Urea 30 kg/acre at knee-high stage"
+        )
+
+    # ---------- Heat Stress ----------
     if maxTemp > 35:
         advice.append(
-            "☀️ High temperature stress detected. Heat may reduce fertilizer efficiency."
+            "☀️ High temperature stress detected."
         )
         priority_actions.append(
             "Schedule irrigation or spraying during cooler hours"
         )
         do_not_do.append(
-            "Do not spray fertilizers or pesticides during midday heat"
+            "Do not spray during midday heat"
         )
 
-  
-    # 🦠 Disease Risk
+    # ---------- Disease Risk ----------
     if humidity > 80 and rain7d > 40:
         advice.append(
-            "🦠 High humidity and rainfall increase disease risk. Monitor crops for fungal infections."
+            "🦠 High humidity and rainfall increase fungal disease risk."
         )
         do_not_do.append(
-            "Avoid excess nitrogen under high humidity conditions"
+            "Avoid excess nitrogen under high humidity"
         )
 
- 
-    # ⚠️ Risk Scores (Explainable)
+    # ---------- Risk Scores ----------
     risks = {
         "water_stress_risk": "High" if ndwi < 0.2 else "Low",
-        "nutrient_stress_risk": "High" if ndvi < 0.45 else "Medium" if ndvi < 0.6 else "Low",
+        "nutrient_stress_risk": (
+            "High" if ndvi < 0.45 else
+            "Medium" if ndvi < 0.6 else
+            "Low"
+        ),
         "disease_risk": "High" if humidity > 80 and rain7d > 40 else "Low"
     }
 
-    # ⚠️ Disclaimer
+    # ---------- Disclaimer ----------
     advice.append(
-        "⚠️ Advisory is based on weather and satellite indicators. Consult local agriculture experts before chemical use."
+        "⚠️ Advisory is based on satellite and weather indicators. Consult local agriculture experts before chemical use."
     )
 
     return {
         "growth_stage": stage,
-        "priority_actions": priority_actions[:3],  # top actions only
+        "priority_actions": priority_actions[:4],
         "farmer_advisory": advice,
         "do_not_do": do_not_do,
         "risk_levels": risks

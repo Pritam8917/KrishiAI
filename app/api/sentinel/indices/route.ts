@@ -46,21 +46,16 @@ export async function POST(req: Request) {
 
   try {
     const { lat, lon } = await req.json();
-
     if (typeof lat !== "number" || typeof lon !== "number") {
       return NextResponse.json({ error: "Invalid lat/lon" }, { status: 400 });
     }
-
     const token = await getSentinelToken();
-
     // Small farm area (~300–400m)
     const delta = 0.001;
-
     const to = new Date();
     const from = new Date();
-
     from.setDate(to.getDate() - 20); // last 20 days
-
+    
     const response = await axios.post<SentinelStatsResponse>(
       STATS_URL,
       {

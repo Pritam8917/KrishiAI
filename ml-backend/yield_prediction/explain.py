@@ -1,28 +1,28 @@
-from model_utils import predict_yield
-
 def explain_yield_drivers(data):
     reasons = []
 
-    if data["rain7d"] < 20:
-        reasons.append("Low rainfall in the past week reduced soil moisture.")
+    # Area based reasoning
+    if data["area"] > 5:
+        reasons.append("Larger land area increases total production potential.")
+    else:
+        reasons.append("Smaller land area limits total yield.")
 
-    if data["ndvi"] < 0.45:
-        reasons.append("Low vegetation index indicates weak crop growth.")
-
-    if data["maxTemp"] > 35:
-        reasons.append("High temperature may have stressed the crop.")
-
-    if not reasons:
-        reasons.append("Weather and crop health indicators are favorable.")
+    # Crop + region reasoning
+    reasons.append(
+        f"Historical yield patterns of {data['crop_name']} in {data['district_name']} were used."
+    )
 
     return reasons
+
+
 def simulate_improvement(data):
     improved = data.copy()
 
-    if improved["ndwi"] < 0.3:
-        improved["ndwi"] = 0.45
+    # simulate 10% area improvement
+    improved["area"] = improved["area"] * 1.1
 
-    return predict_yield(improved)
+    return improved["area"]
+
 
 def yield_confidence(yield_value):
     margin = yield_value * 0.07
