@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import axios from "axios";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 /* ================= TYPES ================= */
 
@@ -45,6 +47,7 @@ export default function StartPrediction() {
   const [advisory, setAdvisory] = useState<AdvisoryData | null>(null);
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // Load farm + latest advisory
   useEffect(() => {
@@ -66,7 +69,7 @@ export default function StartPrediction() {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // <-- important
 
       setFarm(farmData);
       setAdvisory(advisoryData);
@@ -89,6 +92,7 @@ export default function StartPrediction() {
     setLoading(true);
 
     const payload = {
+      user_id: farm.user_id, // <-- REQUIRED
       rain7d: advisory.rain7d,
       rain14d: advisory.rain14d,
       maxtemp: advisory.maxtemp,
@@ -96,7 +100,6 @@ export default function StartPrediction() {
       windspeed: advisory.windspeed,
       ndvi: advisory.ndvi,
       ndwi: advisory.ndwi,
-      crop_type: farm.crop, // ✅ ADD THIS
     };
 
     try {
@@ -118,10 +121,18 @@ export default function StartPrediction() {
 
     setLoading(false);
   };
-
   return (
-    <main className="min-h-screen bg-[#F8F8F2] px-6 py-20">
+    <main className="min-h-screen bg-[#F8F8F2] px-5 py-16">
       <div className="max-w-6xl mx-auto space-y-10">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/")}
+          className="text-white border border-white/30  w-fit bg-[#2FA36B] px-4 py-2 rounded-lg flex items-center gap-1 text-sm cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         {/* HERO */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

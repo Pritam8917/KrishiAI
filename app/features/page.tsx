@@ -4,7 +4,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { TrendingUp, ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
-
+import { useRouter } from "next/navigation";
 /* ================= Animations ================= */
 
 const fadeUp: Variants = {
@@ -46,7 +46,7 @@ export default function Features() {
     "Personalized recommendations",
     "Track progress over time",
   ];
-
+  const router = useRouter();
   return (
     <>
       {/* ================= WHY KRISHIAI ================= */}
@@ -132,6 +132,7 @@ export default function Features() {
                         initial={{ width: 0 }}
                         whileInView={{ width: "92%" }}
                         transition={{ duration: 1.2 }}
+                        viewport={{ once: true }} 
                         className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B]"
                       />
                     </div>
@@ -193,6 +194,7 @@ export default function Features() {
                 hover:opacity-90 hover:-translate-y-1 transition
                 shadow-lg text-lg cursor-pointer
               "
+              onClick={() => router.push("/start-prediction")}
             >
               Start Your Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />

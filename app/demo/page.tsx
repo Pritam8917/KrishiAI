@@ -111,6 +111,7 @@ export default function DemoPreview() {
                       initial={{ width: 0 }}
                       whileInView={{ width: "92%" }}
                       transition={{ duration: 1 }}
+                      viewport={{ once: true }}  
                       className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B]"
                     />
                   </div>
@@ -140,6 +141,7 @@ export default function DemoPreview() {
                     initial={{ left: "0%" }}
                     whileInView={{ left: `${ndviValue * 100}%` }}
                     transition={{ duration: 1 }}
+                    viewport={{ once: true }}
                     className="absolute -top-1 w-1 h-4 bg-black rounded"
                   />
                 </div>
@@ -152,6 +154,7 @@ export default function DemoPreview() {
                       initial={{ height: 0 }}
                       whileInView={{ height: `${v * 40}px` }}
                       transition={{ delay: i * 0.1 }}
+                      viewport={{ once: true }} 
                       className="w-2 rounded bg-emerald-500"
                     />
                   ))}

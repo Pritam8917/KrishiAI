@@ -37,6 +37,7 @@ app.add_middleware(
 # Advisory Input
 # -----------------------------
 class AdvisoryInput(BaseModel):
+    user_id: str
     rain7d: float
     rain14d: float
     maxtemp: float
@@ -63,8 +64,10 @@ def fetch_user_farm_data(user_id: str):
 # API Endpoint
 # -----------------------------
 @app.post("/predict-yield")
-def predict_yield_and_advisory(user_id: str, advisory: AdvisoryInput):
+def predict_yield_and_advisory(advisory: AdvisoryInput):
     try:
+        user_id = advisory.user_id   # only one source
+
         # 1. Fetch farm data
         farm_data = fetch_user_farm_data(user_id)
         if not farm_data:
@@ -73,37 +76,29 @@ def predict_yield_and_advisory(user_id: str, advisory: AdvisoryInput):
         if farm_data["land_size"] <= 0:
             raise HTTPException(status_code=400, detail="Invalid farm size")
 
-        # 2. Save advisory data (WITH USER ID)
+        # 2. Save advisory data
         res = supabase.from_("advisory_data").insert({
-                "user_id": user_id,
-                **advisory.model_dump()
-                }).execute()
+            **advisory.model_dump()
+        }).execute()
+
+        if not res.data:
+            raise Exception("Supabase insert failed")
 
 
-        print("SUPABASE RESPONSE:", res)
-
-        if res.data is None:
-            raise Exception(f"SUPABASE INSERT FAILED: {res}")
-
-
-        # 3. Merge ML input
+        # 3. ML input
         model_input = {
             "crop_name": farm_data["crop"],
             "district_name": farm_data["district"],
             "area": farm_data["land_size"]
         }
 
-        # 4. Yield prediction
+        # 4. Prediction
         predicted_yield = round(predict_yield(model_input), 2)
         low, high = yield_confidence(predicted_yield)
 
-        # 5. Explanation
         yield_explanation = explain_yield_drivers(model_input)
-
-        # 6. Improvement simulation
         potential_yield = simulate_improvement(model_input)
 
-        # 7. Advisory
         advisory_response = generate_farmer_advice(
             ndvi=advisory.ndvi,
             ndwi=advisory.ndwi,
@@ -121,7 +116,6 @@ def predict_yield_and_advisory(user_id: str, advisory: AdvisoryInput):
                 "potential_yield_after_improvement": potential_yield
             },
             "yield_explanation": yield_explanation,
-            # only return array, not full object
             "farmer_advisory": advisory_response["farmer_advisory"]
         }
 
