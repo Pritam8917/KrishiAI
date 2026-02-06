@@ -330,7 +330,7 @@ export default function CropHealth() {
               bg-linear-to-r from-[#195733] to-[#2FA36B]
               text-white shadow-md
               hover:shadow-xl hover:-translate-y-0.5
-              transition-all duration-300
+              transition-all duration-300 cursor-pointer
             "
               >
                 Login to Continue
@@ -344,7 +344,7 @@ export default function CropHealth() {
               w-full py-6 text-base font-semibold rounded-xl
               border-[#195733]/30 text-[#195733]
               hover:bg-[#195733]/10
-              transition-all
+              transition-all cursor-pointer
             "
               >
                 Back to Home
