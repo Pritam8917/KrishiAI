@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, Leaf, MapPin, Sprout } from "lucide-react";
+import { Sparkles, Loader2, Leaf, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -267,21 +267,6 @@ export default function StartPrediction() {
               🔒 Your farm data is encrypted & used only for insights
             </p>
           </div>
-        </div>
-      </div>
-    );
-  }
-  if (loading) {
-    return (
-      <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
-        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-          <div className="h-16 w-16 flex items-center justify-center">
-            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
-          </div>
-          <p className="text-xl font-medium text-[#195733]">
-            Running AI Prediction...
-          </p>
         </div>
       </div>
     );
