@@ -462,16 +462,17 @@ export default function ReportProblemPage() {
                       ? analysisResult.suggestions
                       : [analysisResult.suggestions]
                     ).map((s, i) => (
-                      <motion.li
-                        key={i}
-                        initial={{ opacity: 0, x: -6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 + i * 0.08 }}
-                        className="flex items-start gap-2"
-                      >
-                        <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
-                        <span>{s}</span>
-                      </motion.li>
+                      <li key={i}>
+                        <motion.div
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 + i * 0.08 }}
+                          className="flex items-start gap-2"
+                        >
+                          <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
+                          <span>{s}</span>
+                        </motion.div>
+                      </li>
                     ))}
                   </ul>
                 </motion.div>
