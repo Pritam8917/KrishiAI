@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, Leaf, MapPin } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  Leaf,
+  MapPin,
+  ArrowBigDown,
+  ArrowLeft,
+} from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import axios from "axios";
-import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /* ================= TYPES ================= */
@@ -306,9 +312,19 @@ export default function StartPrediction() {
                 size="lg"
                 className="bg-white text-[#195733] hover:bg-white/90 cursor-pointer px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:scale-105"
               >
-                {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {loading ? (
+                  <Loader2 className="animate-spin" />
+                ) : result ? (
+                  <ArrowBigDown />
+                ) : (
+                  <Sparkles />
+                )}
                 <span className="ml-2">
-                  {loading ? "Running AI..." : "Run AI Prediction"}
+                  {loading
+                    ? "Running AI..."
+                    : result
+                      ? "Prediction ready — scroll down to view results"
+                      : "Run AI Prediction "}
                 </span>
               </Button>
             </CardContent>
