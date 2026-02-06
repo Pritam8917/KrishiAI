@@ -104,7 +104,7 @@ export default function StartPrediction() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/predict-yield",
+        "https://krishiai-xa24.onrender.com/predict-yield",
         payload,
       );
 
