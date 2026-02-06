@@ -282,7 +282,7 @@ function ResultCard({ title, value }: ResultCardProps) {
   return (
     <Card>
       <CardContent className="py-6 text-center">
-        <p className="text-xs text-gray-500">{title}</p>
+        <p className="text-xl text-gray-500">{title}</p>
         <p className="text-2xl font-bold text-[#195733] mt-1">{value}</p>
       </CardContent>
     </Card>

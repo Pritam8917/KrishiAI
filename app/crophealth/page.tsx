@@ -326,17 +326,21 @@ export default function CropHealth() {
               <CardContent className="py-8 flex flex-col md:flex-row justify-between gap-6">
                 <div>
                   <p className="text-sm opacity-90">Overall Crop Health</p>
-                  <h1 className="text-3xl sm:text-4xl font-bold mt-1">
+                  <h1 className="text-2xl sm:text-3xl font-semibold mt-1">
                     {vegetation}
                   </h1>
 
                   <p className="text-xs opacity-80 mt-1">Satellite + Weather</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-3 gap-6">
                   <div>
                     <p className="text-xs opacity-80">NDVI</p>
                     <p className="text-xl font-semibold">{ndvi.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-80">NDWI</p>
+                    <p className="text-xl font-semibold">{ndwi.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-80">Water Stress</p>
