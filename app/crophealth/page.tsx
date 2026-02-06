@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Leaf,
@@ -13,6 +14,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+
 import { Button } from "@/app/components/ui/button";
 import axios from "axios";
 import Header from "@/app/navbar/page";
@@ -20,7 +22,6 @@ import { Card, CardContent } from "@/app/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-//  AI LOGIC (pure functions)
 import {
   getWaterStress,
   getVegetationStatus,
@@ -34,6 +35,7 @@ const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 };
+
 const InlineLoader = () => (
   <Loader2 className="w-5 h-5 animate-spin text-white/80" />
 );
@@ -46,14 +48,20 @@ export default function CropHealth() {
   const [ndvi, setNdvi] = useState<number | null>(null);
   const [ndwi, setNdwi] = useState<number | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [saved, setSaved] = useState(false); // Prevent duplicate DB insert
 
   /* ================= FETCH FARM PROFILE ================= */
+
   useEffect(() => {
     const loadFarm = async () => {
       const { data } = await supabase.auth.getUser();
-      if (!data?.user) return setLoading(false);
 
-      const userID = data.user?.id;
+      if (!data?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const userID = data.user.id;
       setUserId(userID);
 
       const { data: farmData } = await supabase
@@ -70,6 +78,7 @@ export default function CropHealth() {
   }, []);
 
   /* ================= FETCH SATELLITE ================= */
+
   useEffect(() => {
     if (!farm?.latitude || !farm?.longitude) return;
 
@@ -81,6 +90,7 @@ export default function CropHealth() {
       .then((res) => {
         const timeline = res.data.timeline;
         if (!timeline?.length) return;
+
         const latest = timeline[timeline.length - 1];
         setNdvi(latest.ndvi);
         setNdwi(latest.ndwi);
@@ -88,34 +98,81 @@ export default function CropHealth() {
       .catch(console.error);
   }, [farm]);
 
-  /* ================= FETCH WEATHER================= */
+  /* ================= FETCH WEATHER ================= */
+
   useEffect(() => {
-    if (!farm?.latitude) return;
+    if (!farm?.latitude || !farm?.longitude) return;
+
     axios
       .get(`/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`)
-      .then((res) => setWeather(res.data));
+      .then((res) => setWeather(res.data))
+      .catch(console.error);
   }, [farm]);
 
-  /* ================= EXTRACT NUMBERS ================= */
+  /* ================= WEATHER METRICS ================= */
+
   const rain7d =
-    weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0; // Last 7 days rainfall
+    weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0;
 
   const rain14d =
-    weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0; // Last 14 days rainfall
+    weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0;
 
-  const maxtemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0; // Max temperature
+  const maxtemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0;
 
   const avgHumidity = weather
     ? Math.max(...weather.daily.relative_humidity_2m_mean)
-    : 0; // Avg humidity
+    : 0;
+
   const windspeed = weather
     ? Math.max(...weather.daily.wind_speed_10m_max)
-    : undefined; // Max wind speed
+    : undefined;
+
+  /* ================= SAVE ADVISORY ================= */
+
+  interface AdvisoryPayload {
+    user_id: string;
+    rain7d: number;
+    rain14d: number;
+    maxtemp: number;
+    humidity: number;
+    windspeed: number | undefined;
+    ndvi: number;
+    ndwi: number;
+  }
+
+  const saveAdvisory = useCallback(
+    async (payload: AdvisoryPayload) => {
+      if (!userId) return;
+
+      try {
+        const { error } = await supabase.from("advisory_data").insert([
+          {
+            user_id: userId,
+            rain7d: payload.rain7d,
+            rain14d: payload.rain14d,
+            maxtemp: payload.maxtemp,
+            humidity: payload.humidity,
+            windspeed: payload.windspeed,
+            ndvi: payload.ndvi,
+            ndwi: payload.ndwi,
+          },
+        ]);
+
+        if (error) console.error("Supabase Insert Error:", error);
+        else console.log("Advisory Saved");
+      } catch (err) {
+        console.error("Save Advisory Failed:", err);
+      }
+    },
+    [userId],
+  );
+
+  /* ================= SEND TO AI + SAVE ================= */
 
   useEffect(() => {
-    if (!ndvi || !ndwi || !weather) return;
+    if (ndvi === null || ndwi === null || !weather || !userId || saved) return;
 
-    const sendToAI = async () => {
+    const runPipeline = async () => {
       const payload = {
         user_id: userId,
         rain7d,
@@ -127,69 +184,77 @@ export default function CropHealth() {
         ndwi,
       };
 
-      // SEND TO FASTAPI
-      const res = await axios.post(
-        "https://krishiai-xa24.onrender.com/predict-yield",
-        payload,
-      );
-
-      console.log("AI Advisory:", res.data);
+      try {
+        await saveAdvisory(payload);
+        setSaved(true);
+        console.log("Advisory Saved Successfully");
+      } catch (err) {
+        console.error("Pipeline Error:", err);
+      }
     };
-    sendToAI();
+
+    runPipeline();
   }, [
     ndvi,
     ndwi,
     weather,
+    userId,
+    saved,
     rain7d,
     rain14d,
     maxtemp,
     avgHumidity,
     windspeed,
-    userId,
+    saveAdvisory,
   ]);
 
-  /* ================= AI DECISIONS ================= */
+  /* ================= AI UI LOGIC ================= */
 
-  // Vegetation Status
   const vegetation =
     ndvi === null ? <InlineLoader /> : getVegetationStatus(ndvi);
 
-  // Water Stress
   const waterStress =
-    ndwi === null || weather === null ? (
+    ndwi === null || !weather ? (
       <InlineLoader />
     ) : (
       getWaterStress({
         ndwi,
         rain14d,
-        windSpeed: typeof windspeed === "number" ? windspeed : undefined,
+        windSpeed: windspeed,
       })
     );
 
-  // Leaching Risk
   const leachingRisk =
-    ndvi === null || weather === null ? (
+    ndvi === null || !weather ? (
       <InlineLoader />
     ) : (
       getLeachingRisk({ rain7d, ndvi })
     );
 
-  // Disease Risk
   const diseaseRisk =
-    ndvi === null || weather === null ? (
+    ndvi === null || !weather ? (
       <InlineLoader />
     ) : (
       getDiseaseRisk({
         humidity: avgHumidity,
         temp: maxtemp,
         rainDays:
-          weather?.daily.precipitation_sum?.slice(-7).filter((r) => r >= 1)
+          weather.daily.precipitation_sum?.slice(-7).filter((r) => r >= 1)
             .length ?? 0,
         ndvi,
       })
     );
 
-  if (loading) {
+  if (
+    loading ||
+    ndvi === null ||
+    ndwi === null ||
+    !weather ||
+    !waterStress ||
+    !vegetation ||
+    !leachingRisk ||
+    !diseaseRisk
+  ) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
@@ -271,9 +336,7 @@ export default function CropHealth() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <p className="text-xs opacity-80">NDVI</p>
-                    <p className="text-xl font-semibold">
-                      {ndvi === null ? <InlineLoader /> : ndvi.toFixed(2)}
-                    </p>
+                    <p className="text-xl font-semibold">{ndvi.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-80">Water Stress</p>

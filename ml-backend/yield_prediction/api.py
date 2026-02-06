@@ -4,37 +4,44 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 import traceback
-
 from model_utils import predict_yield
 from explain import explain_yield_drivers, simulate_improvement, yield_confidence
 from recommendations import generate_farmer_advice
 from fastapi.middleware.cors import CORSMiddleware
 
-# -----------------------------
-# Load environment variables
-# -----------------------------
+# Load ENV
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("Supabase credentials missing in .env")
+    raise RuntimeError("Supabase credentials missing")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-app = FastAPI(title="AI Crop Yield Prediction & Advisory API")
 
+# -----------------------------
+# FastAPI Init
+# -----------------------------
+app = FastAPI(title="AI Crop Yield Prediction API")
+
+
+# -----------------------------
+# CORS FIXED (NO TRAILING /)
+# -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://krishi-ai-weld-nine.vercel.app/"],
+    allow_origins=[
+        "https://krishi-ai-weld-nine.vercel.app",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # -----------------------------
-# Advisory Input
+# Advisory Input Schema
 # -----------------------------
 class AdvisoryInput(BaseModel):
     user_id: str
@@ -42,14 +49,16 @@ class AdvisoryInput(BaseModel):
     rain14d: float
     maxtemp: float
     humidity: float
-    windspeed: float
+    windspeed: float | None = None
     ndvi: float
     ndwi: float
 
+
 # -----------------------------
-# Fetch user farm data
+# Fetch Farm Data
 # -----------------------------
 def fetch_user_farm_data(user_id: str):
+
     res = (
         supabase
         .from_("farm_profiles")
@@ -58,45 +67,49 @@ def fetch_user_farm_data(user_id: str):
         .single()
         .execute()
     )
+
     return res.data
 
+
 # -----------------------------
-# API Endpoint
+# Prediction Endpoint
 # -----------------------------
 @app.post("/predict-yield")
 def predict_yield_and_advisory(advisory: AdvisoryInput):
+
     try:
-        user_id = advisory.user_id   # only one source
 
-        # 1. Fetch farm data
+        user_id = advisory.user_id
+
+        # -----------------------------
+        # Fetch Farm Data
+        # -----------------------------
         farm_data = fetch_user_farm_data(user_id)
+
         if not farm_data:
-            raise HTTPException(status_code=404, detail="Farm data not found")
+            raise HTTPException(404, "Farm data not found")
 
-        if farm_data["land_size"] <= 0:
-            raise HTTPException(status_code=400, detail="Invalid farm size")
+        if farm_data.get("land_size", 0) <= 0:
+            raise HTTPException(400, "Invalid farm size")
 
-        # 2. Save advisory data
-        res = supabase.from_("advisory_data").insert({
-            **advisory.model_dump()
-        }).execute()
-
-        if not res.data:
-            raise Exception("Supabase insert failed")
-
-
-        # 3. ML input
+        # -----------------------------
+        # ML Input
+        # -----------------------------
         model_input = {
-            "crop_name": farm_data["crop"],
-            "district_name": farm_data["district"],
-            "area": farm_data["land_size"]
+            "crop_name": farm_data.get("crop"),
+            "district_name": farm_data.get("district"),
+            "area": farm_data.get("land_size")
         }
 
-        # 4. Prediction
+        # -----------------------------
+        # ML Prediction
+        # -----------------------------
         predicted_yield = round(predict_yield(model_input), 2)
+
         low, high = yield_confidence(predicted_yield)
 
         yield_explanation = explain_yield_drivers(model_input)
+
         potential_yield = simulate_improvement(model_input)
 
         advisory_response = generate_farmer_advice(
@@ -121,4 +134,4 @@ def predict_yield_and_advisory(advisory: AdvisoryInput):
 
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(500, str(e))
