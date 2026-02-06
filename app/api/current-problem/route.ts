@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     /* ---------- Send to FastAPI ---------- */
     const formData = new FormData();
     formData.append("image", new Blob([buffer]), "leaf.jpg"); //FormData → multipart/form-data → FastAPI UploadFile
-    const mlRes = await axios.post("http://127.0.0.1:8000/problem", formData); 
+    const mlRes = await axios.post("https://krishiai-1-8ycv.onrender.com/problem", formData); 
     const { prediction, confidence } = mlRes.data;
 
     /* ---------- OpenAI suggestions ---------- */
