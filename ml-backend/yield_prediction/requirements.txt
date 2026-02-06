@@ -1,10 +1,8 @@
 fastapi
 uvicorn
 scikit-learn
-torch
 pandas
 numpy
 joblib
 supabase
-torchvision
-dotenv
+python-dotenv
