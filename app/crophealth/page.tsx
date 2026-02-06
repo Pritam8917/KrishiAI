@@ -272,44 +272,90 @@ export default function CropHealth() {
 
   if (!farm) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-[#F8F8F2]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
-        <div className="max-w-md w-full text-center  bg-white/80 backdrop-blur-xl  border border-[#E6EFEA] rounded-3xl shadow-xl p-8 ">
-          <div className=" mx-auto mb-6 h-16 w-16 rounded-2xl  bg-linear-to-br from-[#195733] to-emerald-600  flex items-center justify-center  shadow-md">
-            <Leaf className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#195733] mb-2">
-            Login Required
-          </h2>
-          <p className="text-sm text-gray-600 leading-relaxed mb-6">
-            Crop Health insights are personalized for your farm. Please sign in
-            to view satellite analysis, weather impact, and AI-based
-            recommendations.
-          </p>
+      <div className="relative min-h-screen flex items-center justify-center px-6 bg-[#F6FBF8] overflow-hidden">
+        {/* Background Pattern */}
+        <div
+          className="absolute inset-0 
+      bg-[radial-gradient(circle_at_2px_2px,rgba(25,87,51,0.12)_2px,transparent_2px)]
+      bg-size-[32px_32px] opacity-40 pointer-events-none"
+        />
 
-          <div className="space-y-3">
-            <Button
-              size="lg"
-              onClick={() => router.push("/auth/login")}
-              className=" w-full py-6 text-base font-semibold rounded-xl  bg-linear-to-r from-[#195733] to-emerald-600 text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg  transition-all cursor-pointer "
+        {/* Glass Card */}
+        <div className="relative z-10 w-full max-w-md">
+          <div
+            className="
+        bg-white/70 backdrop-blur-2xl
+        border border-[#E3EFE8]
+        shadow-[0_20px_60px_rgba(0,0,0,0.08)]
+        rounded-3xl
+        p-10
+        text-center
+        transition-all duration-300
+        hover:shadow-[0_30px_80px_rgba(0,0,0,0.12)]
+      "
+          >
+            {/* Icon */}
+            <div
+              className="
+          mx-auto mb-7
+          h-20 w-20
+          rounded-3xl
+          bg-linear-to-br from-[#195733] via-[#237a4b] to-[#2FA36B]
+          flex items-center justify-center
+          shadow-lg
+        "
             >
-              Login to Continue
-            </Button>
+              <Leaf className="w-9 h-9 text-white" />
+            </div>
 
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => router.push("/")}
-              className="w-full py-6 text-base font-semibold rounded-xl  border-[#195733]/30 text-[#195733]  hover:bg-[#195733]/10 cursor-pointer"
-            >
-              Back to Home
-            </Button>
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-[#195733] tracking-tight">
+              Login Required
+            </h2>
+
+            {/* Description */}
+            <p className="mt-3 text-sm leading-relaxed text-gray-600 max-w-sm mx-auto">
+              Crop health insights are personalized for your farm. Sign in to
+              access satellite intelligence, weather analytics, and AI-powered
+              recommendations.
+            </p>
+
+            {/* Buttons */}
+            <div className="mt-8 space-y-4">
+              <Button
+                size="lg"
+                onClick={() => router.push("/auth/login")}
+                className="
+              w-full py-6 text-base font-semibold rounded-xl
+              bg-linear-to-r from-[#195733] to-[#2FA36B]
+              text-white shadow-md
+              hover:shadow-xl hover:-translate-y-0.5
+              transition-all duration-300
+            "
+              >
+                Login to Continue
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => router.push("/")}
+                className="
+              w-full py-6 text-base font-semibold rounded-xl
+              border-[#195733]/30 text-[#195733]
+              hover:bg-[#195733]/10
+              transition-all
+            "
+              >
+                Back to Home
+              </Button>
+            </div>
+
+            {/* Trust Note */}
+            <p className="mt-7 text-xs text-gray-500">
+              🔒 Your farm data is encrypted & used only for insights
+            </p>
           </div>
-
-          {/* Trust note */}
-          <p className="mt-5 text-xs text-gray-500">
-            Your data is secure • Used only for farming insights
-          </p>
         </div>
       </div>
     );
