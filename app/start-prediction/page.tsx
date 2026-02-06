@@ -55,32 +55,41 @@ export default function StartPrediction() {
   const [advisory, setAdvisory] = useState<AdvisoryData | null>(null);
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
 
   // Load farm + latest advisory
   useEffect(() => {
     const loadData = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data?.user) return;
+      try {
+        const { data } = await supabase.auth.getUser();
 
-      const userId = data.user.id;
+        if (!data?.user) {
+          setAuthLoading(false);
+          return;
+        }
 
-      const { data: farmData } = await supabase
-        .from("farm_profiles")
-        .select("user_id,crop,village,district,latitude,longitude")
-        .eq("user_id", userId)
-        .single();
+        const userId = data.user.id;
 
-      const { data: advisoryData } = await supabase
-        .from("advisory_data")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        const { data: farmData } = await supabase
+          .from("farm_profiles")
+          .select("user_id,crop,village,district,latitude,longitude")
+          .eq("user_id", userId)
+          .single();
 
-      setFarm(farmData);
-      setAdvisory(advisoryData);
+        const { data: advisoryData } = await supabase
+          .from("advisory_data")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        setFarm(farmData);
+        setAdvisory(advisoryData);
+      } finally {
+        setAuthLoading(false);
+      }
     };
 
     loadData();
@@ -142,6 +151,24 @@ export default function StartPrediction() {
   };
 
   // Run AI
+  const scrollToResults = () => {
+    const el = document.getElementById("results");
+    if (el) {
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const handlePredictionClick = async () => {
+    if (result) {
+      scrollToResults(); // If result exists → scroll
+    } else {
+      await runPrediction(); // Else → run prediction
+    }
+  };
+
   const runPrediction = async () => {
     if (!farm) {
       alert("Farm profile not found");
@@ -187,6 +214,34 @@ export default function StartPrediction() {
 
     setLoading(false);
   };
+  if (authLoading) {
+    return (
+      <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#F8F8F2] overflow-hidden">
+        {/* dotted background */}
+        <div
+          className="
+          absolute inset-0
+          bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)]
+          bg-size-[36px_36px]
+          opacity-30
+        "
+        />
+
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-[#195733] to-emerald-700 flex items-center justify-center shadow-lg animate-pulse">
+            🌱
+          </div>
+
+          <p className="text-sm font-medium text-[#195733]">
+            Preparing AI Prediction Results…
+          </p>
+
+          <p className="text-xs text-gray-500">Loading AI tools</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (!farm) {
     return (
       <div className="relative min-h-screen flex items-center justify-center px-6 bg-[#F6FBF8] overflow-hidden">
@@ -307,7 +362,7 @@ export default function StartPrediction() {
               </div>
 
               <Button
-                onClick={runPrediction}
+                onClick={handlePredictionClick}
                 disabled={loading}
                 size="lg"
                 className="bg-white text-[#195733] hover:bg-white/90 cursor-pointer px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:scale-105"
@@ -356,7 +411,7 @@ export default function StartPrediction() {
         {/* RESULT */}
         {result && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="border-l-4 border-[#195733]">
+            <Card className="border-l-4 border-[#195733]" id="results">
               <CardContent className="py-8 space-y-6">
                 <h2 className="text-2xl font-bold text-[#195733]">
                   📊 Yield Forecast

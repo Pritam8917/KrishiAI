@@ -44,6 +44,7 @@ export default function CropHealth() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [farm, setFarm] = useState<FarmProfile | null>(null);
   const [ndvi, setNdvi] = useState<number | null>(null);
   const [ndwi, setNdwi] = useState<number | null>(null);
@@ -54,24 +55,28 @@ export default function CropHealth() {
 
   useEffect(() => {
     const loadFarm = async () => {
-      const { data } = await supabase.auth.getUser();
+      try {
+        const { data } = await supabase.auth.getUser();
 
-      if (!data?.user) {
+        if (!data?.user) {
+          setAuthLoading(false);
+          return;
+        }
+
+        const userID = data.user.id;
+        setUserId(userID);
+
+        const { data: farmData } = await supabase
+          .from("farm_profiles")
+          .select("state,district,village,crop,latitude,longitude")
+          .eq("user_id", userID)
+          .single();
+
+        setFarm(farmData);
+      } finally {
+        setAuthLoading(false);
         setLoading(false);
-        return;
       }
-
-      const userID = data.user.id;
-      setUserId(userID);
-
-      const { data: farmData } = await supabase
-        .from("farm_profiles")
-        .select("state,district,village,crop,latitude,longitude")
-        .eq("user_id", userID)
-        .single();
-
-      setFarm(farmData);
-      setLoading(false);
     };
 
     loadFarm();
@@ -337,6 +342,7 @@ export default function CropHealth() {
   }
   if (
     loading ||
+    authLoading ||
     ndvi === null ||
     ndwi === null ||
     weather === null ||

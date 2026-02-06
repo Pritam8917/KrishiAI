@@ -90,6 +90,7 @@ export default function ReportProblemPage() {
       }
     });
   }, [router]);
+  
   /* ---------------- Cleanup ---------------- */
   useEffect(() => {
     return () => {
