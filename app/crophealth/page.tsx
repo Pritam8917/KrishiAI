@@ -249,11 +249,11 @@ export default function CropHealth() {
     loading ||
     ndvi === null ||
     ndwi === null ||
-    !weather ||
-    !waterStress ||
-    !vegetation ||
-    !leachingRisk ||
-    !diseaseRisk
+    weather === null ||
+    waterStress === null ||
+    vegetation === null ||
+    leachingRisk === null ||
+    diseaseRisk === null
   ) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
