@@ -27,7 +27,7 @@ app = FastAPI(title="AI Crop Yield Prediction & Advisory API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://krishi-ai-weld-nine.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
