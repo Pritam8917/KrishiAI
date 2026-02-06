@@ -21,7 +21,12 @@ interface CropSelectorProps {
   onCropInputChange: (input: CropInput) => void;
 }
 export default function CropSelector({
-  cropInput,
+  cropInput = {
+    cropType: "",
+    landSize: 0,
+    landUnit: "acres",
+    sowingDate: undefined,
+  },
   onCropInputChange,
 }: CropSelectorProps) {
   const CROP_TYPES = [
@@ -78,7 +83,7 @@ export default function CropSelector({
               Crop Type
             </Label>
             <Select
-              value={cropInput.cropType}
+              value={cropInput?.cropType || ""}
               onValueChange={(value) =>
                 onCropInputChange({ ...cropInput, cropType: value })
               }
@@ -113,7 +118,7 @@ export default function CropSelector({
                 id="landSize"
                 type="number"
                 placeholder="Enter size"
-                value={cropInput.landSize || ""}
+                value={cropInput?.landSize || ""}
                 onChange={(e) =>
                   onCropInputChange({
                     ...cropInput,
@@ -133,7 +138,7 @@ export default function CropSelector({
               Unit
             </Label>
             <Select
-              value={cropInput.landUnit}
+              value={cropInput?.landUnit || "acres"}
               onValueChange={(value: "acres" | "hectares" | "bigha") =>
                 onCropInputChange({ ...cropInput, landUnit: value })
               }
@@ -157,7 +162,7 @@ export default function CropSelector({
           <div className="rounded-xl border bg-background p-2">
             <Calendar
               mode="single"
-              selected={cropInput.sowingDate}
+              selected={cropInput?.sowingDate}
               onSelect={(date) =>
                 onCropInputChange({ ...cropInput, sowingDate: date })
               }
