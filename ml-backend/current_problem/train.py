@@ -1,4 +1,4 @@
-# ================== ML TRAINING CODE (WINDOWS SAFE) ==================
+# ================== ML TRAINING CODE ==================
 
 import os
 import json

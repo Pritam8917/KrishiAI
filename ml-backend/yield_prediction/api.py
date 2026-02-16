@@ -20,16 +20,10 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-# -----------------------------
 # FastAPI Init
-# -----------------------------
 app = FastAPI(title="AI Crop Yield Prediction API")
 
-
-# -----------------------------
 # CORS FIXED (NO TRAILING /)
-# -----------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -40,9 +34,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# -----------------------------
+
 # Advisory Input Schema
-# -----------------------------
 class AdvisoryInput(BaseModel):
     user_id: str
     rain7d: float
@@ -53,10 +46,7 @@ class AdvisoryInput(BaseModel):
     ndvi: float
     ndwi: float
 
-
-# -----------------------------
 # Fetch Farm Data
-# -----------------------------
 def fetch_user_farm_data(user_id: str):
 
     res = (
@@ -70,20 +60,14 @@ def fetch_user_farm_data(user_id: str):
 
     return res.data
 
-
-# -----------------------------
 # Prediction Endpoint
-# -----------------------------
 @app.post("/predict-yield")
 def predict_yield_and_advisory(advisory: AdvisoryInput):
 
     try:
-
         user_id = advisory.user_id
-
-        # -----------------------------
+        
         # Fetch Farm Data
-        # -----------------------------
         farm_data = fetch_user_farm_data(user_id)
 
         if not farm_data:
@@ -92,18 +76,14 @@ def predict_yield_and_advisory(advisory: AdvisoryInput):
         if farm_data.get("land_size", 0) <= 0:
             raise HTTPException(400, "Invalid farm size")
 
-        # -----------------------------
         # ML Input
-        # -----------------------------
         model_input = {
             "crop_name": farm_data.get("crop"),
             "district_name": farm_data.get("district"),
             "area": farm_data.get("land_size")
         }
 
-        # -----------------------------
         # ML Prediction
-        # -----------------------------
         predicted_yield = round(predict_yield(model_input), 2)
 
         low, high = yield_confidence(predicted_yield)
