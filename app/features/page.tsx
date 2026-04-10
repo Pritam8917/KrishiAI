@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/app/components/ui/card";
 import { TrendingUp,  CheckCircle2 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
-import { useRouter } from "next/navigation";
 /* ================= Animations ================= */
 
 const fadeUp: Variants = {

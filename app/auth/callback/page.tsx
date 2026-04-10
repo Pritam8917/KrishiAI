@@ -27,7 +27,7 @@ export default function AuthCallback() {
       if (!farm) {
         router.push("/farm-setup");
       } else {
-        router.push("/home");
+        router.push("/hero");
       }
     };
 
