@@ -208,7 +208,7 @@ export default function ProfilePage() {
                 </div>
 
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {farm.village}, {farm.block}, <br />
+                  {/* {farm.village}, {farm.block}, <br /> */}
                   {farm.district}, {farm.state}
                 </p>
               </CardContent>

@@ -88,15 +88,15 @@ export default function FarmSetup() {
       return;
     }
 
-    if (!location.block) {
-      toast.error("Please select block");
-      return;
-    }
+    // if (!location.block) {
+    //   toast.error("Please select block");
+    //   return;
+    // }
 
-    if (!location.village) {
-      toast.error("Please select village");
-      return;
-    }
+    // if (!location.village) {
+    //   toast.error("Please select village");
+    //   return;
+    // }
 
     if (location.latitude === null || location.longitude === null) {
       toast.error("Unable to detect farm coordinates");
@@ -131,12 +131,17 @@ export default function FarmSetup() {
         {
           user_id: user.id,
           farmer_name: farmerName,
-          ...location,
+          state: location.state,
+          district: location.district,
+          block: location.block?.trim() ? location.block : null,
+          village: location.village?.trim() ? location.village : null,
+          latitude: location.latitude,
+          longitude: location.longitude,
           crop: cropInput.cropType,
           land_size: cropInput.landSize,
           land_unit: cropInput.landUnit,
         },
-        { onConflict: "user_id" }
+        { onConflict: "user_id" },
       );
 
       if (error) {
@@ -277,7 +282,7 @@ export default function FarmSetup() {
                 "w-full py-7 text-lg font-bold rounded-xl flex items-center justify-center gap-3",
                 "bg-linear-to-br from-[#195733] to-emerald-700 text-white shadow-lg cursor-pointer",
                 !isSaving && "hover:-translate-y-1 hover:shadow-xl",
-                isSaving && "opacity-70 cursor-not-allowed"
+                isSaving && "opacity-70 cursor-not-allowed",
               )}
             >
               {isSaving ? (

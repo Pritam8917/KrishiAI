@@ -1,8 +1,6 @@
 "use client";
-
-import { Button } from "@/app/components/ui/button";
 import { Card, CardContent } from "@/app/components/ui/card";
-import { TrendingUp, ArrowRight, CheckCircle2 } from "lucide-react";
+import { TrendingUp,  CheckCircle2 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 /* ================= Animations ================= */
@@ -46,36 +44,80 @@ export default function Features() {
     "Personalized recommendations",
     "Track progress over time",
   ];
-  const router = useRouter();
+  // const router = useRouter();
   return (
     <>
       {/* ================= WHY KRISHIAI ================= */}
-      <section className="py-24 bg-linear-to-b from-[#E9F4EE] via-[#F8F8F2] to-white">
-        <div className="container mx-auto px-15">
+      <section className="py-20 md:py-24 bg-linear-to-b from-[#E9F4EE] via-[#F8F8F2] to-white relative overflow-hidden">
+        {/* subtle background pattern */}
+        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)]"></div>
+
+        <div className="container mx-auto px-6 md:px-12 relative">
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid lg:grid-cols-2 gap-16 items-center"
+            className="grid lg:grid-cols-2 gap-10 md:gap-16 items-center"
           >
             {/* LEFT CONTENT */}
             <motion.div variants={stagger} initial="hidden" animate="visible">
-              <motion.h2
-                variants={fadeUp}
-                className="font-display text-3xl md:text-4xl font-bold mb-6"
-              >
-                Why Farmers Choose KrishiAI
-              </motion.h2>
+              <div className="flex items-start gap-5">
+                {/* VERTICAL LINE */}
+                <motion.div
+                  initial={{ height: 0 }}
+                  whileInView={{ height: "80px" }}
+                  transition={{ duration: 0.6 }}
+                  className="
+      w-1 min-h-20
+      bg-linear-to-b from-[#195733] to-[#2FA36B]
+      rounded-full
+      shadow-[0_0_12px_rgba(47,163,107,0.6)]
+    "
+                />
 
-              <motion.p
+                {/* TEXT CONTENT */}
+                <div>
+                  {/* small premium badge */}
+                  <motion.p
+                    variants={fadeUp}
+                    className="text-sm font-medium text-green-600 mb-2 tracking-wide"
+                  >
+                    🌱 Smart Farming Powered by AI
+                  </motion.p>
+
+                  <motion.h2
+                    variants={fadeUp}
+                    className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight"
+                  >
+                    Why Farmers Choose{" "}
+                    <span className="bg-linear-to-r from-[#195733] to-[#2FA36B] bg-clip-text text-transparent">
+                      KrishiAI
+                    </span>
+                  </motion.h2>
+
+                  {/* extra premium subtext */}
+                  <motion.p
+                    variants={fadeUp}
+                    className="text-muted-foreground max-w-xl text-base md:text-lg mb-10"
+                  >
+                    Empowering farmers with AI-driven insights, real-time
+                    analytics, and precision agriculture tools to maximize
+                    productivity and reduce risks.
+                  </motion.p>
+                </div>
+              </div>
+
+              {/* <motion.p
                 variants={fadeUp}
                 className="text-muted-foreground mb-10 max-w-xl"
               >
                 KrishiAI combines satellite intelligence, weather insights, and
-                AI models to help farmers make smarter decisions with confidence.
-              </motion.p>
+                AI models to help farmers make smarter decisions with
+                confidence.
+              </motion.p> */}
 
+              {/* BENEFITS CARDS */}
               <motion.div
                 variants={stagger}
                 className="grid sm:grid-cols-2 gap-4"
@@ -84,32 +126,37 @@ export default function Features() {
                   <motion.div
                     key={index}
                     variants={fadeUp}
-                    className="flex items-center gap-3"
+                    whileHover={{ y: -4 }}
+                    className="
+                      group flex items-start gap-3 p-4 rounded-xl
+                      bg-white/70 backdrop-blur-md border border-[#E6EFEA]
+                      hover:shadow-lg transition
+                    "
                   >
-                    <CheckCircle2 className="h-5 w-5 text-[#2FA36B]" />
+                    <CheckCircle2 className="h-5 w-5 text-[#2FA36B] group-hover:scale-110 transition" />
                     <span className="text-sm">{benefit}</span>
                   </motion.div>
                 ))}
               </motion.div>
             </motion.div>
 
-            {/* RIGHT VISUAL CARD */}
+            {/* RIGHT CARD */}
             <motion.div
               variants={softFloat}
               animate="animate"
               className="relative"
             >
-              {/* Soft glow */}
-              <div
-                className="
-                  absolute inset-0
-                  bg-linear-to-br from-[#2FA36B]/25 to-[#F4C430]/20
-                  rounded-3xl blur-3xl opacity-40
-                "
-              />
+              {/* glow */}
+              <div className="absolute inset-0 bg-linear-to-br from-[#2FA36B]/25 to-[#F4C430]/20 rounded-3xl blur-3xl opacity-40" />
 
-              <Card className="relative bg-white/85 backdrop-blur-xl border border-[#E6EFEA] shadow-xl rounded-3xl">
+              {/* floating badge */}
+              <div className="absolute -top-4 -right-4 bg-green-600 text-white text-xs px-3 py-1 rounded-full shadow-lg z-10">
+                AI Powered
+              </div>
+
+              <Card className="relative bg-white/85 backdrop-blur-xl border border-[#E6EFEA] shadow-xl rounded-3xl hover:scale-[1.02] transition duration-300">
                 <CardContent className="p-8 space-y-6">
+                  {/* TOP */}
                   <div className="flex items-center gap-4">
                     <div className="bg-[#195733] p-3 rounded-xl">
                       <TrendingUp className="h-6 w-6 text-white" />
@@ -122,6 +169,7 @@ export default function Features() {
                     </div>
                   </div>
 
+                  {/* PROGRESS */}
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-muted-foreground">Confidence</span>
@@ -132,12 +180,13 @@ export default function Features() {
                         initial={{ width: 0 }}
                         whileInView={{ width: "92%" }}
                         transition={{ duration: 1.2 }}
-                        viewport={{ once: true }} 
-                        className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B]"
+                        viewport={{ once: true }}
+                        className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B] animate-pulse"
                       />
                     </div>
                   </div>
 
+                  {/* RECOMMENDATION */}
                   <div className="pt-4 border-t border-[#E6EFEA]">
                     <p className="text-sm font-medium mb-2">
                       AI Recommendation
@@ -154,54 +203,7 @@ export default function Features() {
         </div>
       </section>
 
-      {/* ================= FINAL CTA ================= */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6 text-center">
-          <motion.h2
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="font-display text-4xl md:text-5xl font-bold mb-4"
-          >
-            Ready to Transform Your Farming?
-          </motion.h2>
-
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            transition={{ delay: 0.1 }}
-            viewport={{ once: true }}
-            className="text-muted-foreground max-w-xl mx-auto mb-10"
-          >
-            Join thousands of farmers who are already using AI to improve crop
-            health, reduce risk, and increase yield.
-          </motion.p>
-
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <Button
-              size="lg"
-              className="
-                bg-linear-to-r from-[#195733] to-[#2FA36B]
-                text-white font-semibold px-12 py-7 rounded-xl
-                hover:opacity-90 hover:-translate-y-1 transition
-                shadow-lg text-lg cursor-pointer
-              "
-              onClick={() => router.push("/start-prediction")}
-            >
-              Start Your Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+      {/* ================= CTA ================= */}
     </>
   );
 }

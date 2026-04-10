@@ -62,7 +62,7 @@ export default function ReportProblemPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [severity, setSeverity] = useState<"low" | "medium" | "high" | null>(
-    null
+    null,
   );
   // const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -90,7 +90,7 @@ export default function ReportProblemPage() {
       }
     });
   }, [router]);
-  
+
   /* ---------------- Cleanup ---------------- */
   useEffect(() => {
     return () => {
@@ -129,17 +129,24 @@ export default function ReportProblemPage() {
       if (!imageFile) throw new Error("No image selected");
 
       const imageUrl = await uploadImage(imageFile);
-
+      console.log("Image uploaded to:", imageUrl);
+      console.log("Api called");
       const { data } = await axios.post("/api/current-problem", {
         image_url: imageUrl,
       });
 
+      const ai = data.ai_response || {};
+
       setAnalysisResult({
         disease: data.predicted_disease,
         confidence: data.confidence,
-        suggestions: data.suggestions,
-        chemicals: data.recommended_chemicals,
-        source: data.source,
+        suggestions: [
+          ...(ai.measures || []),
+          ...(ai.advice ? [ai.advice] : []),
+        ],
+        chemicals: ai.pesticides || [],
+
+        source: data.source || "AI-generated",
       });
     } catch (err) {
       console.error(err);
@@ -151,7 +158,7 @@ export default function ReportProblemPage() {
 
   const toggleSymptom = (id: string) => {
     setSelectedSymptoms((p) =>
-      p.includes(id) ? p.filter((s) => s !== id) : [...p, id]
+      p.includes(id) ? p.filter((s) => s !== id) : [...p, id],
     );
   };
 
@@ -221,7 +228,7 @@ export default function ReportProblemPage() {
                       "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm",
                       selectedSymptoms.includes(s.id)
                         ? "bg-[#195733] text-white"
-                        : "bg-white border-[#E6EFEA]"
+                        : "bg-white border-[#E6EFEA]",
                     )}
                   >
                     <s.icon className="w-5 h-5" />
@@ -241,7 +248,7 @@ export default function ReportProblemPage() {
                     onClick={() => setSeverity(s as "low" | "medium" | "high")}
                     className={cn(
                       "px-6 py-2 rounded-full text-sm border",
-                      severity === s ? "bg-[#195733] text-white" : "bg-white"
+                      severity === s ? "bg-[#195733] text-white" : "bg-white",
                     )}
                   >
                     {s.toUpperCase()}
@@ -334,7 +341,7 @@ export default function ReportProblemPage() {
                   `w-full py-6 text-lg font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer`,
                   canSubmit
                     ? "bg-linear-to-r from-[#195733] to-[#2FA36B] text-white shadow-lg hover:shadow-xl"
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed",
                 )}
               >
                 {analyzing ? (
@@ -412,23 +419,50 @@ export default function ReportProblemPage() {
                 {/* ---------- Disease Card ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="rounded-2xl border border-[#E6EFEA] bg-white p-5"
+                  className="
+    rounded-2xl border border-[#E6EFEA] bg-white 
+    p-6 sm:p-7
+    shadow-sm
+    space-y-4
+  "
                 >
-                  <p className="text-sm text-gray-700">
-                    <span className="font-semibold text-[#195733]">
-                      Detected Disease
-                    </span>
+                  {/* Header */}
+                  <p className="text-sm font-medium text-gray-500 tracking-wide">
+                    🌱 Detected Problem
                   </p>
-                  <p className="mt-1 text-base font-medium capitalize text-gray-900">
-                    {analysisResult.disease.replaceAll("_", " ")}
-                  </p>
+
+                  {/* Content */}
+                  <div className="flex items-center gap-4">
+                    {/* Icon */}
+                    <div
+                      className="
+      flex items-center justify-center
+      h-14 w-14 rounded-xl
+      bg-[#195733]/10
+      text-2xl
+    "
+                    >
+                      🌿
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex flex-col">
+                      <p className="text-lg sm:text-xl font-semibold text-[#195733] capitalize leading-snug">
+                        {analysisResult.disease.replaceAll("_", " ")}
+                      </p>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        Identified from crop image analysis
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
 
                 {/* ---------- Confidence ---------- */}
                 <motion.div variants={fadeItem}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-[#195733]">
-                      Confidence Level
+                      Accuracy (How sure AI is)
                     </span>
                     <span className="text-sm font-bold text-[#195733]">
                       {analysisResult.confidence.toFixed(2)}%
@@ -455,7 +489,7 @@ export default function ReportProblemPage() {
                   className="rounded-2xl border border-[#E6EFEA] bg-white p-6"
                 >
                   <h4 className="font-semibold text-[#195733] mb-3 flex items-center gap-2">
-                    🌾 Suggested Actions
+                     What You Should Do Now
                   </h4>
 
                   <ul className="space-y-2 text-sm text-gray-700">
@@ -482,7 +516,7 @@ export default function ReportProblemPage() {
                 {analysisResult.chemicals.length > 0 && (
                   <motion.div variants={fadeItem}>
                     <h4 className="font-semibold text-[#195733] mb-3 flex items-center gap-2">
-                      💊 Recommended Chemicals (Advisory)
+                      💊 Medicine (Use Carefully)
                     </h4>
 
                     <div className="flex flex-wrap gap-2">
@@ -490,11 +524,7 @@ export default function ReportProblemPage() {
                         <motion.span
                           key={i}
                           whileHover={{ scale: 1.05 }}
-                          className="
-                px-4 py-1.5 rounded-full text-xs font-medium
-                bg-[#195733]/10 text-[#195733]
-                border border-[#195733]/20
-              "
+                          className=" px-4 py-1.5 rounded-full text-xs font-medium bg-[#195733]/10 text-[#195733]border border-[#195733]/20 "
                         >
                           {c}
                         </motion.span>
@@ -502,15 +532,18 @@ export default function ReportProblemPage() {
                     </div>
                   </motion.div>
                 )}
-
+                {/* <div className="rounded-xl bg-red-50 border border-red-200 p-4">
+                  <p className="text-sm font-semibold text-red-700">
+                    🚨 Urgency Level: High
+                  </p>
+                  <p className="text-xs text-red-600">
+                    Take action within 2–3 days to prevent damage
+                  </p>
+                </div> */}
                 {/* ---------- Disclaimer ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="
-        flex items-start gap-3
-        bg-amber-50 border border-amber-200
-        rounded-2xl p-4
-      "
+                  className=" flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4 "
                 >
                   <span className="text-lg">⚠️</span>
                   <p className="text-xs text-amber-800 leading-relaxed">

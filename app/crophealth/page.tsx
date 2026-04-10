@@ -249,6 +249,31 @@ export default function CropHealth() {
         ndvi,
       })
     );
+    
+  const risks = [];
+  if (rain7d > 50) {
+    risks.push({
+      type: "High Rainfall",
+      message: "Excess rain may cause fungal disease risk",
+      level: "high",
+    });
+  }
+
+  if (maxtemp > 38) {
+    risks.push({
+      type: "Heat Stress",
+      message: "High temperature may reduce crop yield",
+      level: "medium",
+    });
+  }
+
+  if (ndvi !== null && ndvi < 0.4) {
+    risks.push({
+      type: "Low Crop Health",
+      message: "Vegetation health is below optimal level",
+      level: "high",
+    });
+  }
   if (authLoading) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
@@ -425,7 +450,7 @@ export default function CropHealth() {
                 <div>
                   <p className="text-xs text-gray-500">Location</p>
                   <p className="font-semibold">
-                    {farm.village}, {farm.district}
+                    {farm.district}, {farm.state}
                   </p>
                 </div>
               </CardContent>
@@ -614,15 +639,53 @@ export default function CropHealth() {
           </Card>
 
           {/* ================= RISK WATCH ================= */}
-          <Card>
-            <CardContent className="py-6">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-amber-500" />
-                Risk Watch (Next 7 Days)
-              </h3>
-              <p className="text-sm text-gray-600">
-                Forecast-based alerts will appear here.
-              </p>
+          <Card className="rounded-2xl border shadow-sm">
+            <CardContent className="py-6 space-y-4">
+              {/* HEADER */}
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2 text-[#195733]">
+                  <ShieldAlert className="w-5 h-5 text-amber-500" />
+                  Risk Watch (Next 7 Days)
+                </h3>
+
+                <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
+                  AI Monitoring
+                </span>
+              </div>
+
+              {/* RISKS */}
+              {risks.length > 0 ? (
+                <div className="space-y-3">
+                  {risks.map((risk, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 p-4 rounded-xl border shadow-sm
+              ${
+                risk.level === "high"
+                  ? "bg-red-50 border-red-200"
+                  : "bg-yellow-50 border-yellow-200"
+              }`}
+                    >
+                      {/* ICON */}
+                      <div className="mt-1">
+                        {risk.level === "high" ? "⚠️" : "⚡"}
+                      </div>
+
+                      {/* TEXT */}
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {risk.type}
+                        </p>
+                        <p className="text-xs text-gray-600">{risk.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 bg-green-50 border border-green-200 p-4 rounded-xl">
+                  ✅ No major risks detected. Crop conditions are stable.
+                </div>
+              )}
             </CardContent>
           </Card>
           {/* ================= REPORT PROBLEM CTA ================= */}

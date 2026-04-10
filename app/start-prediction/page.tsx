@@ -6,11 +6,10 @@ import {
   Sparkles,
   Loader2,
   Leaf,
-  MapPin,
   ArrowBigDown,
   ArrowLeft,
+  Sprout,
 } from "lucide-react";
-import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import axios from "axios";
@@ -21,8 +20,8 @@ import { useRouter } from "next/navigation";
 type FarmProfile = {
   user_id: string;
   crop: string;
-  village: string;
   district: string;
+  state: string;
   latitude?: number;
   longitude?: number;
 };
@@ -73,7 +72,7 @@ export default function StartPrediction() {
 
         const { data: farmData } = await supabase
           .from("farm_profiles")
-          .select("user_id,crop,village,district,latitude,longitude")
+          .select("user_id,crop,state,district,latitude,longitude")
           .eq("user_id", userId)
           .single();
 
@@ -216,32 +215,25 @@ export default function StartPrediction() {
   };
   if (authLoading) {
     return (
-      <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#F8F8F2] overflow-hidden">
-        {/* dotted background */}
-        <div
-          className="
-          absolute inset-0
-          bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)]
-          bg-size-[36px_36px]
-          opacity-30
-        "
-        />
-
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-[#195733] to-emerald-700 flex items-center justify-center shadow-lg animate-pulse">
-            🌱
+      <div className="relative min-h-screen flex items-center justify-center bg-[#F8F8F2] overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_4px_4px,rgba(25,87,51,0.15)_3px,transparent_3px)] bg-size-[36px_36px] opacity-30 pointer-events-none" />
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+          <div className="h-16 w-16 flex items-center justify-center">
+            <Sprout className="w-12 h-12 text-[#195733] animate-pulse" />
           </div>
+          <h2 className="text-xl font-semibold text-[#195733]">
+            Preparing AI Insights
+          </h2>
 
-          <p className="text-sm font-medium text-[#195733]">
-            Preparing AI Prediction Results…
+          <p className="text-sm text-gray-600">
+            Analyzing satellite, weather & farm data
           </p>
-
-          <p className="text-xs text-gray-500">Loading AI tools</p>
         </div>
       </div>
     );
+
   }
-  
+
   if (!farm) {
     return (
       <div className="relative min-h-screen flex items-center justify-center px-6 bg-[#F6FBF8] overflow-hidden">
@@ -333,12 +325,12 @@ export default function StartPrediction() {
     );
   }
   return (
-    <main className="min-h-screen bg-[#F8F8F2] px-5 py-16">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <main className="min-h-screen bg-linear-to-br from-[#F4FAF7] to-[#E6F4EC] px-5 py-14">
+      <div className="max-w-6xl mx-auto space-y-12">
+        {/* BACK */}
         <Button
-          variant="ghost"
           onClick={() => router.push("/")}
-          className="text-white border border-white/30  w-fit bg-[#2FA36B] px-4 py-2 rounded-lg flex items-center gap-1 text-sm cursor-pointer"
+          className="bg-[#2FA36B] text-white px-4 py-2 rounded-lg shadow hover:bg-[#248a59] cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -346,166 +338,175 @@ export default function StartPrediction() {
 
         {/* HERO */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="bg-linear-to-r from-[#195733] to-[#2FA36B] text-white">
-            <CardContent className="py-10 flex flex-col md:flex-row justify-between gap-8">
-              <div>
-                <p className="opacity-90">AI Yield Forecast</p>
-                <h1 className="text-4xl font-bold mt-2">
-                  Predict your crop yield
-                </h1>
-                <p className="opacity-80 mt-2 text-sm max-w-md">
-                  Based on satellite, weather and your farm profile.
-                </p>
-              </div>
+          <div className="bg-linear-to-r from-[#195733] to-[#2FA36B] text-white rounded-3xl p-10 flex flex-col md:flex-row justify-between items-center shadow-xl">
+            <div>
+              <p className="text-sm opacity-80">🌾 Smart Farming AI</p>
+              <h1 className="text-4xl font-bold mt-2">Crop Yield Prediction</h1>
+              <p className="text-sm opacity-80 mt-2 max-w-md">
+                AI-powered insights using satellite + weather data.
+              </p>
+            </div>
 
-              <Button
-                onClick={handlePredictionClick}
-                disabled={loading}
-                size="lg"
-                className="bg-white text-[#195733] hover:bg-white/90 cursor-pointer px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:scale-105"
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" />
-                ) : result ? (
-                  <ArrowBigDown />
-                ) : (
-                  <Sparkles />
-                )}
-                <span className="ml-2">
-                  {loading
-                    ? "Running AI..."
-                    : result
-                      ? "Prediction ready — scroll down to view results"
-                      : "Run AI Prediction "}
-                </span>
-              </Button>
-            </CardContent>
-          </Card>
+            <Button
+              onClick={handlePredictionClick}
+              disabled={loading}
+              className="bg-white hover:bg-amber-50 text-[#195733] px-8 py-5 rounded-xl font-semibold mt-6 md:mt-0 flex items-center gap-2 shadow transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : result ? (
+                <ArrowBigDown />
+              ) : (
+                <Sparkles />
+              )}
+              {loading ? "Analyzing..." : result ? "View Result" : "Run AI"}
+            </Button>
+          </div>
         </motion.div>
 
-        {/* FARM SNAPSHOT */}
+        {/* FARM */}
         {farm && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Snapshot icon={<Leaf />} label="Crop" value={farm.crop} />
-            <Snapshot
-              icon={<MapPin />}
-              label="Location"
-              value={`${farm.village}, ${farm.district}`}
-            />
+          <div className="grid md:grid-cols-3 gap-5">
+            <div className="bg-white p-5 rounded-xl shadow border">
+              <p className="text-xs text-gray-500">Crop</p>
+              <p className="font-bold text-[#195733]">{farm.crop}</p>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl shadow border">
+              <p className="text-xs text-gray-500">Location</p>
+              <p className="font-bold text-[#195733]">
+                {farm.district}, {farm.state}
+              </p>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl shadow border">
+              <p className="text-xs text-gray-500">Monitoring</p>
+              <p className="font-bold text-[#195733]">Active</p>
+            </div>
           </div>
         )}
 
-        {/* INPUT PREVIEW */}
+        {/* METRICS */}
         {advisory && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Metric title="NDVI" value={advisory.ndvi.toFixed(2)} />
-            <Metric title="NDWI" value={advisory.ndwi.toFixed(2)} />
-            <Metric title="Rain (7d)" value={`${advisory.rain7d} mm`} />
-            <Metric title="Max Temp" value={`${advisory.maxtemp} °C`} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {[
+              { label: "NDVI", value: advisory.ndvi.toFixed(2) },
+              { label: "NDWI", value: advisory.ndwi.toFixed(2) },
+              { label: "Rain", value: advisory.rain7d + " mm" },
+              { label: "Temp", value: advisory.maxtemp + " °C" },
+            ].map((m, i) => (
+              <div key={i} className="bg-white p-5 rounded-xl shadow border">
+                <p className="text-xs text-gray-500">{m.label}</p>
+                <p className="text-xl font-bold text-[#195733]">{m.value}</p>
+              </div>
+            ))}
           </div>
         )}
 
         {/* RESULT */}
         {result && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="border-l-4 border-[#195733]" id="results">
-              <CardContent className="py-8 space-y-6">
-                <h2 className="text-2xl font-bold text-[#195733]">
-                  📊 Yield Forecast
-                </h2>
+            <div className="bg-white rounded-3xl shadow-xl border p-8 space-y-8">
+              {/* TITLE */}
+              <h2 className="text-3xl font-bold text-[#195733]">
+                📊 AI Yield Report
+              </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <ResultCard
-                    title="Predicted Yield"
-                    value={`${result.yield_forecast.predicted_yield} ${result.yield_forecast.unit}`}
-                  />
-                  <ResultCard
-                    title="Confidence Range"
-                    value={result.yield_forecast.confidence_range}
-                  />
-                  <ResultCard
-                    title="Potential After Improvement"
-                    value={`${result.yield_forecast.potential_yield_after_improvement} ${result.yield_forecast.unit}`}
-                  />
-                </div>
+              {/* MAIN RESULT */}
+              <div className="bg-linear-to-r from-[#E6F7EF] to-[#F0FAF5] p-8 rounded-2xl text-center border">
+                <p className="text-sm text-gray-600">Predicted Yield</p>
+                <p className="text-5xl font-bold text-[#195733] mt-2">
+                  {result.yield_forecast.predicted_yield}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {result.yield_forecast.unit}
+                </p>
+              </div>
 
-                <div>
-                  <p className="font-semibold">Key Yield Drivers</p>
-                  <ul className="list-disc ml-6 text-sm text-gray-700">
-                    {result.yield_explanation.map((d, i) => (
-                      <li key={i}>{d}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <p className="font-semibold">AI Advisory</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-line">
-                    {result.farmer_advisory}
+              {/* STATS */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <p className="text-sm text-gray-500">Confidence</p>
+                  <p className="text-xl font-bold text-[#195733]">
+                    {result.yield_forecast.confidence_range}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <p className="text-sm text-gray-500">Potential Yield</p>
+                  <p className="text-xl font-bold text-[#195733]">
+                    {Number(
+                      result.yield_forecast.potential_yield_after_improvement,
+                    ).toFixed(2)}{" "}
+                    {result.yield_forecast.unit}
+                  </p>
+                </div>
+              </div>
+
+              {/* DRIVERS */}
+              <div className="bg-[#F9FCFA] p-6 rounded-2xl border">
+                <p className="font-semibold text-[#195733] mb-3">
+                  🌿 Key Factors
+                </p>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {result.yield_explanation.map((d, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="w-2 h-2 bg-[#195733] rounded-full mt-2" />
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* AI ADVISORY (UPGRADED) */}
+              <div className="space-y-6">
+                {/* HEADER */}
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-[#195733] flex items-center gap-2">
+                    🤖 AI Recommendation
+                  </h3>
+                  <span className="text-xs bg-[#195733]/10 text-[#195733] px-3 py-1 rounded-full">
+                    Smart AI
+                  </span>
+                </div>
+
+                {/* SPLIT INTO POINTS */}
+                <div className="grid gap-3">
+                  {result.farmer_advisory
+                    ?.filter((item: string) => item.trim().length > 10)
+                    .map((point: string, i: number) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 bg-white border border-[#E6EFEA] rounded-xl p-4 shadow-sm hover:shadow-md transition"
+                      >
+                        {/* ICON */}
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#195733]/10 text-[#195733] text-sm font-bold">
+                          {i + 1}
+                        </div>
+
+                        {/* TEXT */}
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {point.trim()}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+
+                {/* HIGHLIGHT BOX */}
+                <div className="bg-linear-to-r from-[#E6F7EF] to-[#F0FAF5] border border-[#CDE9DB] p-4 rounded-xl">
+                  <p className="text-xs text-gray-600">
+                    💡 These recommendations are generated using AI based on
+                    your farm conditions, weather, and satellite insights.
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
     </main>
-  );
-}
-
-/* ================= COMPONENTS ================= */
-
-type SnapshotProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-};
-
-function Snapshot({ icon, label, value }: SnapshotProps) {
-  return (
-    <Card>
-      <CardContent className="py-5 flex items-center gap-3">
-        <div className="text-[#195733]">{icon}</div>
-        <div>
-          <p className="text-xs text-gray-500">{label}</p>
-          <p className="font-semibold">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-type MetricProps = {
-  title: string;
-  value: string | number;
-};
-
-function Metric({ title, value }: MetricProps) {
-  return (
-    <Card>
-      <CardContent className="py-5">
-        <p className="text-xs text-gray-500">{title}</p>
-        <p className="text-xl font-bold text-[#195733]">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-type ResultCardProps = {
-  title: string;
-  value: string | number;
-};
-
-function ResultCard({ title, value }: ResultCardProps) {
-  return (
-    <Card>
-      <CardContent className="py-6 text-center">
-        <p className="text-xl text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-[#195733] mt-1">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

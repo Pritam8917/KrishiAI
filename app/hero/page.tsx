@@ -14,7 +14,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 
-
 /* ===================== CountUp ===================== */
 
 interface CountUpProps {
@@ -156,24 +155,25 @@ export default function HeroSection() {
           </motion.p>
 
           {/* CTA */}
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-col sm:flex-row justify-center gap-6 mb-16"
-          >
-            <motion.div variants={glowPulse} animate="animate" className="rounded-xl">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+            <motion.div
+              variants={glowPulse}
+              animate="animate"
+              className="rounded-xl"
+            >
               <Button
                 size="lg"
                 className="bg-[#FABE25] hover:bg-[#cb9a20] text-black
                 px-12 py-7 text-lg font-semibold rounded-xl
-                transition-all hover:-translate-y-1 hover:scale-[1.03] cursor-pointer w-full "
+                transition-all cursor-pointer w-full group"
                 onClick={() => router.push("/start-prediction")}
               >
-                Start Free Analysis
-                <ArrowRight className="ml-2 w-6 h-6" />
+                Start Free Analysis{" "}
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Button>
             </motion.div>
 
-            <Button
+            {/* <Button
               variant="outline"
               size="lg"
               className="px-12 py-7 text-lg font-bold rounded-xl
@@ -181,8 +181,8 @@ export default function HeroSection() {
               transition-all hover:-translate-y-1 hover:bg-white/20 cursor-pointer"
             >
               Watch Demo
-            </Button>
-          </motion.div>
+            </Button> */}
+          </div>
 
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-3">
@@ -211,22 +211,25 @@ export default function HeroSection() {
           variants={stagger}
           initial="hidden"
           animate={statsInView ? "visible" : "hidden"}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+          className="mt-20 grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
         >
           {[
-            { value: 98, suffix: "%", label: "Prediction Accuracy" },
-            { value: 50, suffix: "K+", label: "Farmers Served" },
-            { value: 15, suffix: "+", label: "Crop Types" },
+            { value: 95, suffix: "%", label: "Prediction Accuracy" },
+            { value: 10, suffix: "+", label: "Crop Types" },
             { value: 24, suffix: "/7", label: "AI Monitoring" },
           ].map((stat, index) => (
             <motion.div
               key={index}
               variants={fadeUp}
               whileHover={{ scale: 1.06 }}
-              className="text-center p-4 rounded-xl
-              bg-white/10 backdrop-blur-md border border-white/10"
+              className={`
+      text-center p-3 rounded-xl
+      bg-white/10 backdrop-blur-md border border-white/10
+
+      ${index === 2 ? "col-span-2 md:col-span-1" : ""}
+    `}
             >
-              <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-1">
+              <div className="text-2xl md:text-4xl font-bold text-amber-400 mb-1">
                 <CountUp
                   to={stat.value}
                   suffix={stat.suffix}

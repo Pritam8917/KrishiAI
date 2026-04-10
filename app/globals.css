@@ -123,3 +123,6 @@
     @apply bg-background text-foreground;
   }
 }
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
