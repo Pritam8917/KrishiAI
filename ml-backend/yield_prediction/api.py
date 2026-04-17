@@ -102,15 +102,21 @@ def predict_yield_and_advisory(advisory: AdvisoryInput):
         )
 
         return {
-            "yield_forecast": {
-                "predicted_yield": predicted_yield,
-                "unit": "tons/hectare",
-                "confidence_range": f"{low} – {high}",
-                "potential_yield_after_improvement": potential_yield
-            },
-            "yield_explanation": yield_explanation,
-            "farmer_advisory": advisory_response["farmer_advisory"]
+        "yield_forecast": {
+        "predicted_yield": predicted_yield,
+        "unit": "tons/hectare",
+        "confidence_range": f"{low} – {high}",
+        "potential_yield_after_improvement": potential_yield
+        },
+        "yield_explanation": yield_explanation,
+        "advisory": {
+        "growth_stage": advisory_response.get("growth_stage"),
+        "priority_actions": advisory_response.get("priority_actions", []),
+        "recommendations": advisory_response.get("farmer_advisory", []),
+        "do_not_do": advisory_response.get("do_not_do", []),
+        "risk_levels": advisory_response.get("risk_levels", {})
         }
+}
 
     except Exception as e:
         traceback.print_exc()

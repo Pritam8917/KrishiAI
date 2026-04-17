@@ -44,7 +44,18 @@ type PredictionResult = {
     potential_yield_after_improvement: number;
   };
   yield_explanation: string[];
-  farmer_advisory: string[];
+
+  advisory: {
+    growth_stage: string;
+    priority_actions: string[];
+    recommendations: string[]; // ✅ FIXED
+    do_not_do: string[];
+    risk_levels: {
+      water_stress_risk: string;
+      nutrient_stress_risk: string;
+      disease_risk: string;
+    };
+  };
 };
 
 /* ================= PAGE ================= */
@@ -98,11 +109,14 @@ export default function StartPrediction() {
   const generateAdvisoryIfMissing = async () => {
     if (!farm?.latitude || !farm?.longitude || !farm?.user_id) return null;
 
-    // Satellite
-    const satRes = await axios.post("/api/sentinel/indices", {
-      lat: farm.latitude,
-      lon: farm.longitude,
-    });
+    // Satellite & Weather API calls
+    const [satRes, weatherRes] = await Promise.all([
+      axios.post("/api/sentinel/indices", {
+        lat: farm.latitude,
+        lon: farm.longitude,
+      }),
+      axios.get(`/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`),
+    ]);
 
     const timeline = satRes.data.timeline;
     if (!timeline?.length) return null;
@@ -111,11 +125,6 @@ export default function StartPrediction() {
 
     const ndvi = latest.ndvi;
     const ndwi = latest.ndwi;
-
-    //  Weather
-    const weatherRes = await axios.get(
-      `/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`,
-    );
 
     const weather = weatherRes.data;
 
@@ -167,40 +176,38 @@ export default function StartPrediction() {
       await runPrediction(); // Else → run prediction
     }
   };
+  useEffect(() => {
+    if (farm && !advisory) {
+      generateAdvisoryIfMissing(); // preload in background
+    }
+  }, [farm]);
 
   const runPrediction = async () => {
     if (!farm) {
       alert("Farm profile not found");
       return;
     }
+
     if (!advisory) {
-      alert("Satellite data not found");
+      alert("Preparing satellite data... Please wait a moment.");
       return;
     }
 
     setLoading(true);
+
     try {
-      let finalAdvisory: AdvisoryData | null = advisory;
-
-      if (!finalAdvisory) {
-        finalAdvisory = await generateAdvisoryIfMissing();
-      }
-
-      if (!finalAdvisory) throw new Error("Advisory generation failed");
-
       const payload = {
-        user_id: farm.user_id, // <-- REQUIRED
-        ...finalAdvisory,
+        user_id: farm.user_id,
+        ...advisory,
       };
+
       const res = await axios.post(
-        [
-          "https://krishiai-xa24.onrender.com/predict-yield",
-          "http://localhost:8000/predict-yield",
-        ][0],
+        "https://krishiai-xa24.onrender.com/predict-yield",
         payload,
       );
-
+      console.log("RESULT:", res.data);
       setResult(res.data);
+
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error("AI ERROR:", err.response?.data || err.message);
@@ -209,9 +216,9 @@ export default function StartPrediction() {
         console.error("UNKNOWN ERROR:", err);
         alert("Unexpected error occurred");
       }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
   if (authLoading) {
     return (
@@ -231,7 +238,6 @@ export default function StartPrediction() {
         </div>
       </div>
     );
-
   }
 
   if (!farm) {
@@ -324,6 +330,7 @@ export default function StartPrediction() {
       </div>
     );
   }
+  const aiAdvisory = result?.advisory || ({} as PredictionResult['advisory']);
   return (
     <main className="min-h-screen bg-linear-to-br from-[#F4FAF7] to-[#E6F4EC] px-5 py-14">
       <div className="max-w-6xl mx-auto space-y-12">
@@ -414,7 +421,6 @@ export default function StartPrediction() {
               <h2 className="text-3xl font-bold text-[#195733]">
                 📊 AI Yield Report
               </h2>
-
               {/* MAIN RESULT */}
               <div className="bg-linear-to-r from-[#E6F7EF] to-[#F0FAF5] p-8 rounded-2xl text-center border">
                 <p className="text-sm text-gray-600">Predicted Yield</p>
@@ -425,7 +431,6 @@ export default function StartPrediction() {
                   {result.yield_forecast.unit}
                 </p>
               </div>
-
               {/* STATS */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
@@ -445,7 +450,6 @@ export default function StartPrediction() {
                   </p>
                 </div>
               </div>
-
               {/* DRIVERS */}
               <div className="bg-[#F9FCFA] p-6 rounded-2xl border">
                 <p className="font-semibold text-[#195733] mb-3">
@@ -460,47 +464,108 @@ export default function StartPrediction() {
                   ))}
                 </ul>
               </div>
-
-              {/* AI ADVISORY (UPGRADED) */}
-              <div className="space-y-6">
+              {/* ===================== ADVISORY SYSTEM ===================== */}
+              
+              <div className="space-y-8">
                 {/* HEADER */}
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-[#195733] flex items-center gap-2">
-                    🤖 AI Recommendation
+                  <h3 className="text-xl font-semibold text-[#195733] flex items-center gap-2">
+                    🤖 AI Advisory System
                   </h3>
                   <span className="text-xs bg-[#195733]/10 text-[#195733] px-3 py-1 rounded-full">
                     Smart AI
                   </span>
                 </div>
 
-                {/* SPLIT INTO POINTS */}
-                <div className="grid gap-3">
-                  {result.farmer_advisory
-                    ?.filter((item: string) => item.trim().length > 10)
-                    .map((point: string, i: number) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 bg-white border border-[#E6EFEA] rounded-xl p-4 shadow-sm hover:shadow-md transition"
-                      >
-                        {/* ICON */}
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#195733]/10 text-[#195733] text-sm font-bold">
-                          {i + 1}
-                        </div>
-
-                        {/* TEXT */}
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {point.trim()}
-                        </p>
-                      </div>
-                    ))}
+                {/* 🌱 Growth Stage */}
+                <div className="bg-linear-to-r from-[#E6F7EF] to-[#F4FAF7] border rounded-xl p-5 shadow-sm">
+                  <p className="text-xs text-gray-500">Growth Stage</p>
+                  <p className="text-xl font-bold text-[#195733] capitalize">
+                    {aiAdvisory.growth_stage || "Unknown"}
+                  </p>
                 </div>
 
-                {/* HIGHLIGHT BOX */}
-                <div className="bg-linear-to-r from-[#E6F7EF] to-[#F0FAF5] border border-[#CDE9DB] p-4 rounded-xl">
-                  <p className="text-xs text-gray-600">
-                    💡 These recommendations are generated using AI based on
-                    your farm conditions, weather, and satellite insights.
-                  </p>
+                {/* ⚠️ Risk Dashboard */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {Object.entries(aiAdvisory.risk_levels || {}).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="p-4 rounded-xl border bg-white shadow-sm flex flex-col items-center hover:shadow-md transition"
+                      >
+                        <p className="text-xs text-gray-500 capitalize">
+                          {key.replace(/_/g, " ")}
+                        </p>
+                        <p
+                          className={`font-bold text-lg ${
+                            value === "High"
+                              ? "text-red-500"
+                              : value === "Medium"
+                                ? "text-amber-500"
+                                : "text-green-600"
+                          }`}
+                        >
+                          {value}
+                        </p>
+                      </div>
+                    ),
+                  )}
+                </div>
+
+                {/* 🚀 Priority Actions */}
+                <div>
+                  <h4 className="font-semibold text-[#195733] mb-3">
+                    🚀 Priority Actions
+                  </h4>
+                  <div className="grid gap-3">
+                    {(aiAdvisory.priority_actions || []).map((action, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 bg-[#F4FAF7] border border-[#DCEFE6] rounded-xl p-4 hover:shadow-md transition"
+                      >
+                        <div className="w-7 h-7 flex items-center justify-center rounded-full bg-[#195733] text-white text-sm font-bold">
+                          {i + 1}
+                        </div>
+                        <p className="text-sm text-gray-700">{action}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 🤖 Recommendations */}
+                <div>
+                  <h4 className="font-semibold text-[#195733] mb-3">
+                    🤖 Recommendations
+                  </h4>
+                  <div className="grid gap-3">
+                    {(aiAdvisory.recommendations || []).map((point, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition"
+                      >
+                        <span className="w-2 h-2 bg-[#195733] rounded-full mt-2" />
+                        <p className="text-sm text-gray-700">{point}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ❌ Do Not Do */}
+                <div>
+                  <h4 className="font-semibold text-red-500 mb-3">
+                    ❌ Avoid These Actions
+                  </h4>
+                  <div className="grid gap-3">
+                    {(aiAdvisory.do_not_do || []).map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4"
+                      >
+                        <span className="w-2 h-2 bg-red-500 rounded-full mt-2" />
+                        <p className="text-sm text-gray-700">{item}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

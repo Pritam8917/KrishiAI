@@ -78,9 +78,9 @@ export default function ReportProblemPage() {
     chemicals: string[];
     source: string;
   }>(null);
+  const [status, setStatus] = useState("");
 
   /* ---------------- Auth ---------------- */
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
@@ -101,7 +101,6 @@ export default function ReportProblemPage() {
   }, [previewUrl]);
 
   /* ---------------- Upload ---------------- */
-
   const uploadImage = async (file: File) => {
     setUploading(true);
     const ext = file.name.split(".").pop();
@@ -127,16 +126,17 @@ export default function ReportProblemPage() {
       setErrorMsg(null);
 
       if (!imageFile) throw new Error("No image selected");
-
+      setStatus("Uploading image...");
       const imageUrl = await uploadImage(imageFile);
       console.log("Image uploaded to:", imageUrl);
       console.log("Api called");
+      setStatus("Analyzing crop disease...");
       const { data } = await axios.post("/api/current-problem", {
         image_url: imageUrl,
       });
-
+      setStatus("Generating recommendations...");
       const ai = data.ai_response || {};
-
+      console.log("AI response:", ai);
       setAnalysisResult({
         disease: data.predicted_disease,
         confidence: data.confidence,
@@ -146,8 +146,9 @@ export default function ReportProblemPage() {
         ],
         chemicals: ai.pesticides || [],
 
-        source: data.source || "AI-generated",
+        source: data.source || "Expert-curated",
       });
+      setStatus("Done ✅");
     } catch (err) {
       console.error(err);
       setErrorMsg("AI analysis failed. Please try again.");
@@ -330,42 +331,29 @@ export default function ReportProblemPage() {
             </div>
 
             {/* CTA */}
-            <motion.div
-              whileHover={!analyzing && canSubmit ? { scale: 1.03 } : {}}
-              whileTap={!analyzing && canSubmit ? { scale: 0.97 } : {}}
+            <Button
+              disabled={!canSubmit || analyzing || uploading}
+              onClick={handleSubmit}
+              className={cn(
+                "w-full py-6 text-lg font-semibold rounded-2xl flex items-center justify-center gap-3 transition-all duration-300",
+                canSubmit
+                  ? "bg-linear-to-r from-[#195733] to-[#2FA36B] text-white shadow-lg hover:shadow-xl cursor-pointer"
+                  : "bg-gray-300 text-gray-600 cursor-not-allowed",
+              )}
             >
-              <Button
-                disabled={!canSubmit || analyzing || uploading}
-                onClick={handleSubmit}
-                className={cn(
-                  `w-full py-6 text-lg font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer`,
-                  canSubmit
-                    ? "bg-linear-to-r from-[#195733] to-[#2FA36B] text-white shadow-lg hover:shadow-xl"
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed",
-                )}
-              >
-                {analyzing ? (
-                  <span className="flex items-center gap-3">
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1,
-                        ease: "linear",
-                      }}
-                    >
-                      <Sprout className="w-5 h-5" />
-                    </motion.span>
-                    AI Analyzing...
+              {analyzing ? (
+                <>
+                  <span className="flex items-center gap-2">
+                    <Sprout className="w-4 h-4 animate-spin" />
+                    {status || "Analyzing..."}
                   </span>
-                ) : (
-                  <>
-                    Get AI Diagnosis
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </Button>
-            </motion.div>
+                </>
+              ) : (
+                <>
+                  Analyze Crop <ArrowRight />
+                </>
+              )}
+            </Button>
 
             {errorMsg && (
               <p className="text-center text-sm text-red-600">{errorMsg}</p>
@@ -489,7 +477,7 @@ export default function ReportProblemPage() {
                   className="rounded-2xl border border-[#E6EFEA] bg-white p-6"
                 >
                   <h4 className="font-semibold text-[#195733] mb-3 flex items-center gap-2">
-                     What You Should Do Now
+                    What You Should Do Now
                   </h4>
 
                   <ul className="space-y-2 text-sm text-gray-700">

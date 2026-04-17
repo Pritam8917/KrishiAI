@@ -70,21 +70,6 @@ const stagger: Variants = {
   },
 };
 
-const glowPulse: Variants = {
-  animate: {
-    boxShadow: [
-      "0 0 0px rgba(250,190,37,0)",
-      "0 0 45px rgba(250,190,37,0.45)",
-      "0 0 0px rgba(250,190,37,0)",
-    ],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut",
-    },
-  },
-};
-
 /* ===================== Component ===================== */
 
 export default function HeroSection() {
@@ -117,14 +102,17 @@ export default function HeroSection() {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
+          initial={{ opacity: 0, y: 40, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{
+            duration: 1,
+            delay: 0.1,
+            ease: [0.25, 0.8, 0.25, 1],
+          }}
           className="max-w-4xl mx-auto text-center"
         >
           {/* Badge */}
-          <motion.div
-            variants={fadeUp}
+          <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full
             bg-white/10 backdrop-blur-md border border-white/20 text-white mb-8"
           >
@@ -132,35 +120,24 @@ export default function HeroSection() {
             <span className="text-sm font-medium">
               AI-Powered Agriculture Intelligence
             </span>
-          </motion.div>
+          </div>
 
           {/* Heading */}
-          <motion.h1
-            variants={fadeUp}
-            className="font-display text-5xl md:text-7xl font-bold text-white mb-6"
-          >
+          <h1 className="font-display text-5xl md:text-7xl font-bold text-white mb-6">
             Smart Farming
             <span className="block text-amber-400">Starts Here</span>
-          </motion.h1>
+          </h1>
 
           {/* Subtitle */}
-          <motion.p
-            variants={fadeUp}
-            transition={{ delay: 0.15 }}
-            className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10"
-          >
+          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
             Harness the power of AI, satellite imagery, and real-time data to
             predict crop yields, optimize resources, and maximize your farm’s
             potential.
-          </motion.p>
+          </p>
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-            <motion.div
-              variants={glowPulse}
-              animate="animate"
-              className="rounded-xl"
-            >
+            <div className="rounded-xl">
               <Button
                 size="lg"
                 className="bg-[#FABE25] hover:bg-[#cb9a20] text-black
@@ -171,7 +148,7 @@ export default function HeroSection() {
                 Start Free Analysis{" "}
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Button>
-            </motion.div>
+            </div>
 
             {/* <Button
               variant="outline"
@@ -187,10 +164,8 @@ export default function HeroSection() {
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-3">
             {features.map((feature, index) => (
-              <motion.div
+              <div
                 key={index}
-                variants={fadeUp}
-                whileHover={{ y: -6, scale: 1.05 }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl
                 bg-white/10 backdrop-blur-md border border-white/10 text-white"
               >
@@ -200,7 +175,7 @@ export default function HeroSection() {
                   <feature.icon className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-medium">{feature.label}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.div>
@@ -222,12 +197,7 @@ export default function HeroSection() {
               key={index}
               variants={fadeUp}
               whileHover={{ scale: 1.06 }}
-              className={`
-      text-center p-3 rounded-xl
-      bg-white/10 backdrop-blur-md border border-white/10
-
-      ${index === 2 ? "col-span-2 md:col-span-1" : ""}
-    `}
+              className={`text-center p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 ${index === 2 ? "col-span-2 md:col-span-1" : ""} `}
             >
               <div className="text-2xl md:text-4xl font-bold text-amber-400 mb-1">
                 <CountUp
@@ -243,9 +213,9 @@ export default function HeroSection() {
       </div>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
-          <div className="w-1.5 h-3 rounded-full bg-white/50" />
+      <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="w-5 h-9 sm:w-6 sm:h-10 rounded-full border border-white/30 flex items-start justify-center p-1.5 sm:p-2">
+          <div className="w-1 h-2.5 sm:w-1.5 sm:h-3 rounded-full bg-white/50" />
         </div>
       </div>
     </section>

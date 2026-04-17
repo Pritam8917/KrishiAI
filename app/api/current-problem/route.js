@@ -68,8 +68,7 @@ export async function POST(req) {
         ],
       });
 
-      const rawtext =
-        response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const rawtext = response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
       const cleanedText = rawtext
         .replace(/```json/gi, "")
         .replace(/```/g, "")

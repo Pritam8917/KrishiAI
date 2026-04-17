@@ -34,7 +34,7 @@ export default function FAQSection() {
     <section className="relative py-24 bg-[#F8F8F2] overflow-hidden ">
       
       {/* Background glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#2FA36B]/10 to-[#195733]/10 blur-3xl opacity-40"></div>
+      <div className="absolute inset-0 bg-linear-to-br from-[#2FA36B]/10 to-[#195733]/10 blur-3xl opacity-40"></div>
 
       <div className="container mx-auto px-6 relative">
         

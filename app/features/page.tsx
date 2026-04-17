@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardContent } from "@/app/components/ui/card";
-import { TrendingUp,  CheckCircle2 } from "lucide-react";
+import { TrendingUp, CheckCircle2 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 /* ================= Animations ================= */
 
@@ -176,11 +176,15 @@ export default function Features() {
                     </div>
                     <div className="h-2 rounded-full bg-[#E6EFEA] overflow-hidden">
                       <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "92%" }}
-                        transition={{ duration: 1.2 }}
+                        initial={{ scaleX: 0 }}
+                        whileInView={{ scaleX: 0.92 }}
+                        transition={{
+                          duration: 1.2,
+                          ease: [0.25, 0.8, 0.25, 1], // buttery easing
+                        }}
                         viewport={{ once: true }}
-                        className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B] animate-pulse"
+                        style={{ transformOrigin: "left" }}
+                        className="h-full rounded-full bg-[#195733]"
                       />
                     </div>
                   </div>
@@ -201,8 +205,6 @@ export default function Features() {
           </motion.div>
         </div>
       </section>
-
-      {/* ================= CTA ================= */}
     </>
   );
 }

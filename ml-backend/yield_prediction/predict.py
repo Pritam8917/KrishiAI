@@ -17,21 +17,19 @@ farm_data = {
     "humidity": 78,
     "maxTemp": 34
 }
-
-
 df = pd.DataFrame([farm_data])
 
-# 1️⃣ Yield Prediction (NO manual encoding)
+# Yield Prediction (NO manual encoding)
 predicted_yield = float(pipe.predict(df)[0])
 low, high = yield_confidence(predicted_yield)
 
-# 2️⃣ Explain yield drivers
+# Explain yield drivers
 yield_explanation = explain_yield_drivers(farm_data)
 
-# 3️⃣ Yield improvement simulation
+# Yield improvement simulation
 potential_yield = simulate_improvement(farm_data)
 
-# 4️⃣ Advisory input
+# Advisory input
 weather_data = {
     "ndvi": 0.52,
     "ndwi": 0.18,
@@ -49,7 +47,7 @@ advisory = generate_farmer_advice(
     crop_type=farm_data["crop_name"]
 )
 
-# 5️⃣ Final response
+# Final response
 response = {
     "yield_forecast": {
         "predicted_yield": round(predicted_yield, 2),
