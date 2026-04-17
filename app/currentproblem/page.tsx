@@ -100,9 +100,31 @@ export default function ReportProblemPage() {
     };
   }, [previewUrl]);
 
+  // Compress image before upload (BIG SPEED BOOST)
+  const compressImage = async (file: File): Promise<File> => {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+
+    const scale = 0.5; // reduce size
+    canvas.width = bitmap.width * scale;
+    canvas.height = bitmap.height * scale;
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    return new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          resolve(new File([blob!], file.name, { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.7,
+      );
+    });
+  };
+
   /* ---------------- Upload ---------------- */
   const uploadImage = async (file: File) => {
-    setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `issues/report-${Date.now()}.${ext}`;
 
@@ -114,29 +136,35 @@ export default function ReportProblemPage() {
 
     const { data } = supabase.storage.from("crop_reports").getPublicUrl(path);
 
-    setUploading(false);
     return data.publicUrl;
   };
 
   /* ---------------- Submit ---------------- */
 
   const handleSubmit = async () => {
+    if (!imageFile) return;
+
     try {
       setAnalyzing(true);
       setErrorMsg(null);
 
-      if (!imageFile) throw new Error("No image selected");
-      setStatus("Uploading image...");
-      const imageUrl = await uploadImage(imageFile);
-      console.log("Image uploaded to:", imageUrl);
-      console.log("Api called");
+      // Compress first (faster upload)
+      const compressedFile = await compressImage(imageFile);
+
+      setStatus(" Uploading image...");
+
+      const imageUrl = await uploadImage(compressedFile);
+
       setStatus("Analyzing crop disease...");
-      const { data } = await axios.post("/api/current-problem", {
-        image_url: imageUrl,
-      });
-      setStatus("Generating recommendations...");
+
+      // Add timeout (avoid long waits)
+      const { data } = await axios.post(
+        "/api/current-problem",
+        { image_url: imageUrl },
+      );
+
       const ai = data.ai_response || {};
-      console.log("AI response:", ai);
+
       setAnalysisResult({
         disease: data.predicted_disease,
         confidence: data.confidence,
@@ -145,9 +173,9 @@ export default function ReportProblemPage() {
           ...(ai.advice ? [ai.advice] : []),
         ],
         chemicals: ai.pesticides || [],
-
         source: data.source || "Expert-curated",
       });
+
       setStatus("Done ✅");
     } catch (err) {
       console.error(err);
@@ -359,6 +387,14 @@ export default function ReportProblemPage() {
               <p className="text-center text-sm text-red-600">{errorMsg}</p>
             )}
 
+            {analyzing && (
+              <div className="mt-10 space-y-4 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-1/3" />
+                <div className="h-20 bg-gray-200 rounded-xl" />
+                <div className="h-3 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+              </div>
+            )}
             {/* ---------------- RESULT ---------------- */}
             {analysisResult && (
               <motion.div
@@ -366,14 +402,14 @@ export default function ReportProblemPage() {
                 initial="hidden"
                 animate="visible"
                 className="
-                relative mt-14 p-8 sm:p-10
-                 rounded-3xl
-                bg-white/70 backdrop-blur-xl
-                  border border-[#E6EFEA]
-                  shadow-[0_20px_60px_-20px_rgba(25,87,51,0.35)]
-                  space-y-8
-                  overflow-hidden
-                "
+      relative mt-14 p-6 sm:p-8
+      rounded-3xl
+      bg-white/80 backdrop-blur-xl
+      border border-[#E6EFEA]
+      shadow-[0_20px_60px_-20px_rgba(25,87,51,0.35)]
+      space-y-6
+      overflow-hidden
+    "
               >
                 {/* Soft glow */}
                 <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#2FA36B]/15 rounded-full blur-3xl pointer-events-none" />
@@ -381,22 +417,19 @@ export default function ReportProblemPage() {
                 {/* ---------- Header ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="flex items-center justify-between flex-wrap gap-4"
+                  className="flex items-center justify-between gap-4 flex-wrap"
                 >
-                  <h2 className="text-2xl font-bold text-[#195733] flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#195733]">
                     🌱 AI Diagnosis Result
                   </h2>
 
-                  {/* Source badge */}
                   <span
-                    className={`
-          px-4 py-1.5 rounded-full text-xs font-semibold
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
           ${
             analysisResult.source === "AI-generated"
               ? "bg-[#195733]/10 text-[#195733]"
               : "bg-blue-100 text-blue-700"
-          }
-        `}
+          }`}
                   >
                     {analysisResult.source === "AI-generated"
                       ? "AI Generated"
@@ -408,76 +441,63 @@ export default function ReportProblemPage() {
                 <motion.div
                   variants={fadeItem}
                   className="
-    rounded-2xl border border-[#E6EFEA] bg-white 
-    p-6 sm:p-7
-    shadow-sm
-    space-y-4
-  "
+        rounded-2xl border border-[#E6EFEA] bg-white
+        p-5 sm:p-6
+        shadow-sm
+      "
                 >
-                  {/* Header */}
-                  <p className="text-sm font-medium text-gray-500 tracking-wide">
-                    🌱 Detected Problem
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                    Detected Problem
                   </p>
 
-                  {/* Content */}
                   <div className="flex items-center gap-4">
-                    {/* Icon */}
-                    <div
-                      className="
-      flex items-center justify-center
-      h-14 w-14 rounded-xl
-      bg-[#195733]/10
-      text-2xl
-    "
-                    >
+                    <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-[#195733]/10 text-xl">
                       🌿
                     </div>
 
-                    {/* Text */}
-                    <div className="flex flex-col">
-                      <p className="text-lg sm:text-xl font-semibold text-[#195733] capitalize leading-snug">
+                    <div>
+                      <p className="text-lg font-semibold text-[#195733] capitalize">
                         {analysisResult.disease.replaceAll("_", " ")}
                       </p>
-
-                      <p className="text-xs text-gray-500 mt-1">
-                        Identified from crop image analysis
+                      <p className="text-xs text-gray-500">
+                        Based on image analysis
                       </p>
                     </div>
                   </div>
                 </motion.div>
 
                 {/* ---------- Confidence ---------- */}
-                <motion.div variants={fadeItem}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-[#195733]">
-                      Accuracy (How sure AI is)
+                <motion.div variants={fadeItem} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-[#195733]">
+                      Confidence Level
                     </span>
-                    <span className="text-sm font-bold text-[#195733]">
+                    <span className="font-semibold text-[#195733]">
                       {analysisResult.confidence.toFixed(2)}%
                     </span>
                   </div>
 
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${analysisResult.confidence}%` }}
-                      transition={{ duration: 0.9, ease: "easeOut" }}
-                      className="h-3 rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B]"
+                      transition={{ duration: 0.8 }}
+                      className="h-full rounded-full bg-linear-to-r from-[#195733] to-[#2FA36B]"
                     />
                   </div>
 
-                  <p className="mt-2 text-xs text-gray-500">
-                    Based on model prediction confidence and symptom correlation
+                  <p className="text-xs text-gray-500">
+                    AI confidence based on crop condition
                   </p>
                 </motion.div>
 
                 {/* ---------- Suggestions ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="rounded-2xl border border-[#E6EFEA] bg-white p-6"
+                  className="rounded-2xl border border-[#E6EFEA] bg-white p-5 sm:p-6"
                 >
-                  <h4 className="font-semibold text-[#195733] mb-3 flex items-center gap-2">
-                    What You Should Do Now
+                  <h4 className="font-semibold text-[#195733] mb-3">
+                    Recommended Actions
                   </h4>
 
                   <ul className="space-y-2 text-sm text-gray-700">
@@ -485,16 +505,9 @@ export default function ReportProblemPage() {
                       ? analysisResult.suggestions
                       : [analysisResult.suggestions]
                     ).map((s, i) => (
-                      <li key={i}>
-                        <motion.div
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.15 + i * 0.08 }}
-                          className="flex items-start gap-2"
-                        >
-                          <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
-                          <span>{s}</span>
-                        </motion.div>
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
+                        <span className="leading-relaxed">{s}</span>
                       </li>
                     ))}
                   </ul>
@@ -503,41 +516,32 @@ export default function ReportProblemPage() {
                 {/* ---------- Chemicals ---------- */}
                 {analysisResult.chemicals.length > 0 && (
                   <motion.div variants={fadeItem}>
-                    <h4 className="font-semibold text-[#195733] mb-3 flex items-center gap-2">
-                      💊 Medicine (Use Carefully)
+                    <h4 className="font-semibold text-[#195733] mb-2">
+                      Recommended Medicines
                     </h4>
 
                     <div className="flex flex-wrap gap-2">
                       {analysisResult.chemicals.map((c, i) => (
-                        <motion.span
+                        <span
                           key={i}
-                          whileHover={{ scale: 1.05 }}
-                          className=" px-4 py-1.5 rounded-full text-xs font-medium bg-[#195733]/10 text-[#195733]border border-[#195733]/20 "
+                          className="px-3 py-1 rounded-full text-xs font-medium bg-[#195733]/10 text-[#195733] border border-[#195733]/20"
                         >
                           {c}
-                        </motion.span>
+                        </span>
                       ))}
                     </div>
                   </motion.div>
                 )}
-                {/* <div className="rounded-xl bg-red-50 border border-red-200 p-4">
-                  <p className="text-sm font-semibold text-red-700">
-                    🚨 Urgency Level: High
-                  </p>
-                  <p className="text-xs text-red-600">
-                    Take action within 2–3 days to prevent damage
-                  </p>
-                </div> */}
+
                 {/* ---------- Disclaimer ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className=" flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4 "
+                  className="flex gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3"
                 >
-                  <span className="text-lg">⚠️</span>
+                  <span>⚠️</span>
                   <p className="text-xs text-amber-800 leading-relaxed">
-                    This recommendation is generated using AI and historical
-                    agricultural data. Always consult certified agricultural
-                    officers before applying chemical treatments.
+                    This is AI-generated advice. Consult agricultural experts
+                    before using any chemicals.
                   </p>
                 </motion.div>
               </motion.div>

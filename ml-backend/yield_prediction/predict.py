@@ -56,7 +56,14 @@ response = {
         "potential_yield_after_improvement": potential_yield
     },
     "yield_explanation": yield_explanation,
-    "farmer_advisory": advisory
+
+    "advisory": {
+        "growth_stage": advisory.get("growth_stage"),
+        "priority_actions": advisory.get("priority_actions", []),
+        "recommendations": advisory.get("farmer_advisory", []),
+        "do_not_do": advisory.get("do_not_do", []),
+        "risk_levels": advisory.get("risk_levels", {})
+    }
 }
 
 import json
