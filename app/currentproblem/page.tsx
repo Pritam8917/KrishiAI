@@ -150,21 +150,45 @@ export default function ReportProblemPage() {
 
       // Compress first (faster upload)
       const compressedFile = await compressImage(imageFile);
-
       setStatus(" Uploading image...");
-
       const imageUrl = await uploadImage(compressedFile);
-
       setStatus("Analyzing crop disease...");
 
-      // Add timeout (avoid long waits)
-      const { data } = await axios.post(
-        "/api/current-problem",
-        { image_url: imageUrl },
+      const { data } = await axios.post("/api/current-problem", {
+        image_url: imageUrl,
+      });
+
+      // save report to supabase
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("User not authenticated");
+        return;
+      }
+
+      const symptomLabels = selectedSymptoms.map(
+        (id) => symptoms.find((s) => s.id === id)?.label,
       );
 
-      const ai = data.ai_response || {};
+      const { error } = await supabase.from("crop_reports").insert([
+        {
+          user_id: user.id,
+          symptoms: symptomLabels,
+          severity: severity,
+          image_url: imageUrl,
+          predicted_disease: data.predicted_disease,
+        },
+      ]);
+      if (error) {
+        console.error("SUPABASE ERROR:", error.message);
+        alert("Failed to save data");
+      } else {
+        console.log("Saved to database ✅");
+      }
 
+      const ai = data.ai_response || {};
       setAnalysisResult({
         disease: data.predicted_disease,
         confidence: data.confidence,
@@ -378,7 +402,7 @@ export default function ReportProblemPage() {
                 </>
               ) : (
                 <>
-                  Analyze Crop <ArrowRight />
+                  Analyze Disease <ArrowRight />
                 </>
               )}
             </Button>

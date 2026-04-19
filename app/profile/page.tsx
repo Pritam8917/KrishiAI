@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
-import { User, MapPin, Leaf, Ruler, Edit, Sprout } from "lucide-react";
+import {
+  User,
+  MapPin,
+  Leaf,
+  Ruler,
+  Edit,
+  Sprout,
+  Lightbulb,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "../navbar/page";
 import { motion, type Variants } from "framer-motion";
@@ -27,7 +35,17 @@ const stagger: Variants = {
     },
   },
 };
+type Prediction = {
+  predicted_yield: number;
+  potential_after_improvement: number;
+  created_at?: string;
+};
 
+type CropReport = {
+  predicted_disease: string;
+  created_at?: string;
+  severity?: string;
+};
 /* ================= Component ================= */
 
 export default function ProfilePage() {
@@ -46,8 +64,54 @@ export default function ProfilePage() {
 
   const [farm, setFarm] = useState<FarmProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastPrediction, setLastPrediction] = useState<Prediction | null>(null);
+  const [lastDisease, setLastDisease] = useState<CropReport | null>(null);
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   useEffect(() => {
+    // Fetches the most recent disease report for the user
+    const fetchLastDisease = async (userId: string) => {
+      const { data, error } = await supabase
+        .from("crop_reports")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error) {
+        setLastDisease(data);
+      } else {
+        console.error("Disease fetch error:", error.message);
+      }
+    };
+
+    // Fetches the most recent yield prediction for the user
+    const fetchLastPrediction = async (userId: string) => {
+      const { data, error } = await supabase
+        .from("yield_predictions")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error) {
+        setLastPrediction(data);
+      } else {
+        console.error("Prediction fetch error:", error.message);
+      }
+    };
+
     const fetchProfile = async () => {
       const {
         data: { user },
@@ -65,6 +129,9 @@ export default function ProfilePage() {
         .single();
 
       if (!error) setFarm(data);
+
+      await fetchLastPrediction(user.id);
+      await fetchLastDisease(user.id);
       setLoading(false);
     };
 
@@ -234,6 +301,170 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {/* ================= LAST PREDICTION ================= */}
+          <motion.div variants={fadeUp} whileHover={{ y: -4 }}>
+            {lastPrediction ? (
+              <Card className="border-l-4 border-emerald-600 shadow-sm bg-white/90 backdrop-blur">
+                <CardContent className="pt-6 space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <Sprout className="w-5 h-5 text-emerald-600" />
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-[#195733]">
+                          Last Yield Prediction
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Based on latest AI analysis
+                        </p>
+                      </div>
+                    </div>
+                    <p className="flex items-center justify-end gap-2 text-xs text-gray-700">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                      </span>
+                      {formatDate(lastPrediction.created_at)}
+                    </p>
+                  </div>
+
+                  {/* Data Section */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Predicted */}
+                    <div className="p-4 rounded-xl bg-[#F4FBF7] border border-emerald-100">
+                      <p className="text-xs text-gray-500 mb-1">
+                        Predicted Yield
+                      </p>
+                      <p className="text-xl font-bold text-[#195733]">
+                        {lastPrediction.predicted_yield}
+                      </p>
+                      <p className="text-xs text-gray-500">tons/hectare</p>
+                    </div>
+
+                    {/* Potential */}
+                    <div className="p-4 rounded-xl bg-[#F0F9FF] border border-blue-100">
+                      <p className="text-xs text-gray-500 mb-1">
+                        After Improvement
+                      </p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {lastPrediction.potential_after_improvement}
+                      </p>
+                      <p className="text-xs text-gray-500">tons/hectare</p>
+                    </div>
+                  </div>
+
+                  {/* Insight */}
+                  <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-100 rounded-lg p-3">
+                    <Lightbulb className="w-4 h-4 text-yellow-500 inline mr-2" />
+                    You can improve yield by{" "}
+                    <b>
+                      {(
+                        lastPrediction.potential_after_improvement -
+                        lastPrediction.predicted_yield
+                      ).toFixed(2)}
+                    </b>{" "}
+                    tons/hectare with better practices.
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border border-dashed border-gray-300 bg-white/70 backdrop-blur">
+                <CardContent className="pt-6 text-center space-y-3">
+                  <div className="text-3xl">🌱</div>
+                  <h3 className="font-semibold text-gray-700">
+                    No Prediction Yet
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Run your first AI prediction to see results here.
+                  </p>
+
+                  <Button
+                    onClick={() => router.push("/start-prediction")}
+                    className="bg-[#195733] text-white hover:bg-[#144427] cursor-pointer transition-all shadow-md  "
+                  >
+                    Run Prediction
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+          {/* ================= LAST DISEASE =================*/}
+          <motion.div variants={fadeUp} whileHover={{ y: -4 }}>
+            {lastDisease ? (
+              <Card className="border-l-4 border-red-500 shadow-sm bg-white/90 backdrop-blur">
+                <CardContent className="pt-6 space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        🌿
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-[#195733]">
+                          Last Disease Detection
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Based on image analysis
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="flex items-center justify-end gap-2 text-xs text-gray-700">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                      </span>
+                      {formatDate(lastDisease.created_at)}
+                    </p>
+                  </div>
+
+                  {/* Disease */}
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-100">
+                    <p className="text-xs text-gray-500 mb-1">
+                      Detected Disease
+                    </p>
+                    <p className="text-md font-bold text-red-600 capitalize">
+                      {lastDisease.predicted_disease.replaceAll("_", " ")}
+                    </p>
+                  </div>
+
+                  {/* Severity */}
+                  {lastDisease.severity && (
+                    <div className="text-sm text-gray-600">
+                      Severity:{" "}
+                      <b className="capitalize text-[#195733]">
+                        {lastDisease.severity}
+                      </b>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border border-dashed border-gray-300 bg-white/70 backdrop-blur">
+                <CardContent className="pt-6 text-center space-y-3">
+                  <div className="text-3xl">🧪</div>
+                  <h3 className="font-semibold text-gray-700">
+                    No Disease Report Yet
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Analyze a crop image to detect disease.
+                  </p>
+
+                  <Button
+                    onClick={() => router.push("/report-problem")}
+                    className="bg-[#195733] text-white hover:bg-[#144427]"
+                  >
+                    Diagnose Crop
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
 
           {/* ================= ACTIONS ================= */}

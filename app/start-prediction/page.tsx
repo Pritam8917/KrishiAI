@@ -208,6 +208,22 @@ export default function StartPrediction() {
       console.log("RESULT:", res.data);
       setResult(res.data);
 
+      //save result to supabase
+      const { error } = await supabase.from("yield_predictions").insert([
+        {
+          user_id: farm.user_id,
+          predicted_yield:  res.data.yield_forecast.predicted_yield,
+          potential_after_improvement: res.data.yield_forecast.potential_yield_after_improvement,
+        },
+      ]);
+
+      if (error) {
+        console.error("SUPABASE ERROR:", error.message);
+        alert("Failed to save data");
+      } else {
+        console.log("Saved to Supabase ✅");
+      }
+
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error("AI ERROR:", err.response?.data || err.message);
@@ -330,7 +346,7 @@ export default function StartPrediction() {
       </div>
     );
   }
-  const aiAdvisory = result?.advisory || ({} as PredictionResult['advisory']);
+  const aiAdvisory = result?.advisory || ({} as PredictionResult["advisory"]);
   return (
     <main className="min-h-screen bg-linear-to-br from-[#F4FAF7] to-[#E6F4EC] px-5 py-14">
       <div className="max-w-6xl mx-auto space-y-12">
@@ -416,7 +432,7 @@ export default function StartPrediction() {
         {/* RESULT */}
         {result && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="bg-white rounded-3xl shadow-xl border p-8 space-y-8">
+            <div className="bg-white rounded-3xl shadow-xl border p-8 space-y-8 mt-10" id="results">
               {/* TITLE */}
               <h2 className="text-3xl font-bold text-[#195733]">
                 📊 AI Yield Report
@@ -465,7 +481,7 @@ export default function StartPrediction() {
                 </ul>
               </div>
               {/* ===================== ADVISORY SYSTEM ===================== */}
-              
+
               <div className="space-y-8">
                 {/* HEADER */}
                 <div className="flex justify-between items-center">
