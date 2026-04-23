@@ -107,7 +107,6 @@ export default function CropHealth() {
 
   useEffect(() => {
     if (!farm?.latitude || !farm?.longitude) return;
-
     axios
       .get(`/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`)
       .then((res) => setWeather(res.data))
