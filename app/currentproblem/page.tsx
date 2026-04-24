@@ -81,8 +81,7 @@ export default function ReportProblemPage() {
   const [status, setStatus] = useState("");
 
   /* ---------------- Auth ---------------- */
-  useEffect(() => {
-    //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
+  useEffect(() => { //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         router.replace("/auth/login");
@@ -155,7 +154,6 @@ export default function ReportProblemPage() {
       setStatus(" Uploading image...");
       const imageUrl = await uploadImage(compressedFile);
       setStatus("Analyzing crop disease...");
-      //
       const { data } = await axios.post("/api/current-problem", {
         image_url: imageUrl,
       });
@@ -421,7 +419,6 @@ export default function ReportProblemPage() {
                 <div className="h-3 bg-gray-200 rounded w-2/3" />
               </div>
             )}
-
             {/* ---------------- RESULT ---------------- */}
             {analysisResult && (
               <motion.div
@@ -484,7 +481,7 @@ export default function ReportProblemPage() {
 
                     <div>
                       <p className="text-lg font-semibold text-[#195733] capitalize">
-                        {analysisResult.disease.replaceAll("_", " ")}
+                        {analysisResult?.disease?.replaceAll?.("_", " ") || "Unknown Disease"}
                       </p>
                       <p className="text-xs text-gray-500">
                         Based on image analysis
@@ -500,7 +497,7 @@ export default function ReportProblemPage() {
                       Confidence Level
                     </span>
                     <span className="font-semibold text-[#195733]">
-                      {analysisResult.confidence.toFixed(2)}%
+                      {analysisResult?.confidence?.toFixed?.(2) ?? "0.00"}%
                     </span>
                   </div>
 
@@ -521,31 +518,23 @@ export default function ReportProblemPage() {
                 {/* ---------- Suggestions ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="rounded-2xl border border-[#E6EFEA] bg-white p-6 shadow-sm"
+                  className="rounded-2xl border border-[#E6EFEA] bg-white p-5 sm:p-6"
                 >
-                  <h4 className="font-semibold text-[#195733] mb-4 flex items-center gap-2">
-                    🌱 Recommended Actions
+                  <h4 className="font-semibold text-[#195733] mb-3">
+                    Recommended Actions
                   </h4>
 
-                  <div className="space-y-3">
+                  <ul className="space-y-2 text-sm text-gray-700">
                     {(Array.isArray(analysisResult.suggestions)
                       ? analysisResult.suggestions
                       : [analysisResult.suggestions]
                     ).map((s, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 p-3 rounded-xl bg-[#F6FBF8] border border-[#E6EFEA] hover:bg-[#EEF7F2] transition"
-                      >
-                        {/* Icon */}
-                        <div className="mt-1 text-green-700 text-lg">✔</div>
-
-                        {/* Text */}
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {s}
-                        </p>
-                      </div>
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
+                        <span className="leading-relaxed">{s}</span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </motion.div>
 
                 {/* ---------- Chemicals ---------- */}
