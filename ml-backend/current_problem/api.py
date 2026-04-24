@@ -52,19 +52,32 @@ transform = transforms.Compose([
 
 # ---------------- API ----------------
 @app.post("/problem")
+async def predict(image: UploadFile = File(...)):
 
-async def predict(image: UploadFile = File(...)): # Receive image file
-    image_bytes = await image.read()
-    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    # Validate file
+    if not image.content_type.startswith("image/"):
+        return {"error": "Invalid file type"}
+
+    try:
+        image_bytes = await image.read()
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        return {"error": "Invalid image"}
+
     img = transform(img).unsqueeze(0).to(device)
 
-    with torch.no_grad():
+    with torch.inference_mode():
         outputs = model(img)
         probs = torch.softmax(outputs, dim=1)
         idx = probs.argmax(1).item()
         confidence = probs[0][idx].item()
 
+    prediction = CLASS_NAMES[idx]
+
+    if confidence < 0.6:
+        prediction = "Uncertain"
+
     return {
-        "prediction": CLASS_NAMES[idx],
+        "prediction": prediction,
         "confidence": round(confidence * 100, 2)
     }

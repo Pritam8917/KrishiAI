@@ -81,7 +81,7 @@ export default function ReportProblemPage() {
   const [status, setStatus] = useState("");
 
   /* ---------------- Auth ---------------- */
-  useEffect(() => {
+  useEffect(() => { //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         router.replace("/auth/login");
@@ -128,19 +128,20 @@ export default function ReportProblemPage() {
     const ext = file.name.split(".").pop();
     const path = `issues/report-${Date.now()}.${ext}`;
 
+    //upload to supabase storage
     const { error } = await supabase.storage
       .from("crop_reports")
       .upload(path, file);
 
     if (error) throw error;
 
+    //fetchpublic url of the uploaded image from supabase storage
     const { data } = supabase.storage.from("crop_reports").getPublicUrl(path);
 
     return data.publicUrl;
   };
 
   /* ---------------- Submit ---------------- */
-
   const handleSubmit = async () => {
     if (!imageFile) return;
 
@@ -153,12 +154,12 @@ export default function ReportProblemPage() {
       setStatus(" Uploading image...");
       const imageUrl = await uploadImage(compressedFile);
       setStatus("Analyzing crop disease...");
-
+      //
       const { data } = await axios.post("/api/current-problem", {
         image_url: imageUrl,
       });
 
-      // save report to supabase
+      // user have to be authenticated to save report data to supabase, so we get user info from supabase auth
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -171,7 +172,7 @@ export default function ReportProblemPage() {
       const symptomLabels = selectedSymptoms.map(
         (id) => symptoms.find((s) => s.id === id)?.label,
       );
-
+      // Save report to supabase
       const { error } = await supabase.from("crop_reports").insert([
         {
           user_id: user.id,
@@ -185,7 +186,7 @@ export default function ReportProblemPage() {
         console.error("SUPABASE ERROR:", error.message);
         alert("Failed to save data");
       } else {
-        console.log("Saved to database ✅");
+        console.log("Saved to database successfully");
       }
 
       const ai = data.ai_response || {};
@@ -419,6 +420,7 @@ export default function ReportProblemPage() {
                 <div className="h-3 bg-gray-200 rounded w-2/3" />
               </div>
             )}
+            
             {/* ---------------- RESULT ---------------- */}
             {analysisResult && (
               <motion.div

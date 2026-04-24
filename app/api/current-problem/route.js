@@ -17,10 +17,12 @@ const supabase = createClient(
 export async function POST(req) {
   try {
     const { image_url } = await req.json();
+
     //image validation
     if (!image_url) {
       return NextResponse.json({ error: "image_url missing" }, { status: 400 });
     }
+
     // Extract path from URL
     const path = image_url.split("/crop_reports/")[1];
     if (!path) throw new Error("Invalid image_url");
@@ -33,6 +35,7 @@ export async function POST(req) {
     if (error || !data) {
       throw new Error("Supabase download failed");
     }
+
     // Convert to buffer for ML upload
     const buffer = await data.arrayBuffer();
 
@@ -42,7 +45,7 @@ export async function POST(req) {
 
     const mlRes = await axios.post(
       "https://krishiai-1-8ycv.onrender.com/problem",
-      formData,
+      formData, //image send as multipart/form-data
       { headers: { "Content-Type": "multipart/form-data" } },
     );
 
