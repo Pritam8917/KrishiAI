@@ -43,6 +43,7 @@ type Prediction = {
 
 type CropReport = {
   predicted_disease: string;
+  confidence?: number;
   created_at?: string;
   severity?: string;
 };
@@ -393,6 +394,7 @@ export default function ProfilePage() {
               </Card>
             )}
           </motion.div>
+
           {/* ================= LAST DISEASE =================*/}
           <motion.div variants={fadeUp} whileHover={{ y: -4 }}>
             {lastDisease ? (
@@ -433,7 +435,24 @@ export default function ProfilePage() {
                       {lastDisease.predicted_disease.replaceAll("_", " ")}
                     </p>
                   </div>
+                  {typeof lastDisease.confidence === "number" && (
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-gray-500">Confidence</p>
+                        <p className="text-sm font-semibold text-emerald-700">
+                          {lastDisease.confidence}%
+                        </p>
+                      </div>
 
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-600 transition-all"
+                          style={{ width: `${lastDisease.confidence}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   {/* Severity */}
                   {lastDisease.severity && (
                     <div className="text-sm text-gray-600">

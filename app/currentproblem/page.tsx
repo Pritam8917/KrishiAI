@@ -12,6 +12,8 @@ import {
   Image as ImageIcon,
   ArrowRight,
   Sprout,
+  CheckCircle,
+  Pill,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "@/app/navbar/page";
@@ -81,7 +83,8 @@ export default function ReportProblemPage() {
   const [status, setStatus] = useState("");
 
   /* ---------------- Auth ---------------- */
-  useEffect(() => { //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
+  useEffect(() => {
+    //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         router.replace("/auth/login");
@@ -154,6 +157,7 @@ export default function ReportProblemPage() {
       setStatus(" Uploading image...");
       const imageUrl = await uploadImage(compressedFile);
       setStatus("Analyzing crop disease...");
+      //api calling
       const { data } = await axios.post("/api/current-problem", {
         image_url: imageUrl,
       });
@@ -179,8 +183,10 @@ export default function ReportProblemPage() {
           severity: severity,
           image_url: imageUrl,
           predicted_disease: data.predicted_disease,
+          confidence: data.confidence,
         },
       ]);
+
       if (error) {
         console.error("SUPABASE ERROR:", error.message);
         alert("Failed to save data");
@@ -203,7 +209,7 @@ export default function ReportProblemPage() {
       setStatus("Done ✅");
     } catch (err) {
       console.error(err);
-      setErrorMsg("AI analysis failed. Please try again.");
+      setErrorMsg("AI analysis failed. Please try again later.");
     } finally {
       setAnalyzing(false);
     }
@@ -481,7 +487,8 @@ export default function ReportProblemPage() {
 
                     <div>
                       <p className="text-lg font-semibold text-[#195733] capitalize">
-                        {analysisResult?.disease?.replaceAll?.("_", " ") || "Unknown Disease"}
+                        {analysisResult?.disease?.replaceAll?.("_", " ") ||
+                          "Unknown Disease"}
                       </p>
                       <p className="text-xs text-gray-500">
                         Based on image analysis
@@ -518,19 +525,23 @@ export default function ReportProblemPage() {
                 {/* ---------- Suggestions ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="rounded-2xl border border-[#E6EFEA] bg-white p-5 sm:p-6"
+                  className="rounded-2xl border border-[#E6EFEA] bg-white p-6 shadow-sm hover:shadow-md transition-all"
                 >
-                  <h4 className="font-semibold text-[#195733] mb-3">
+                  <h4 className="font-semibold text-[#195733] mb-4 flex items-center gap-2">
+                    <span className="text-lg">🌿</span>
                     Recommended Actions
                   </h4>
 
-                  <ul className="space-y-2 text-sm text-gray-700">
+                  <ul className="space-y-3 text-sm text-gray-700">
                     {(Array.isArray(analysisResult.suggestions)
                       ? analysisResult.suggestions
                       : [analysisResult.suggestions]
                     ).map((s, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1 h-2 w-2 rounded-full bg-[#195733]" />
+                      <li
+                        key={i}
+                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-green-50 transition"
+                      >
+                        <CheckCircle className="text-green-600 w-4 h-4 mt-1 shrink-0" />
                         <span className="leading-relaxed">{s}</span>
                       </li>
                     ))}
@@ -538,9 +549,14 @@ export default function ReportProblemPage() {
                 </motion.div>
 
                 {/* ---------- Chemicals ---------- */}
-                {analysisResult.chemicals.length > 0 && (
-                  <motion.div variants={fadeItem}>
-                    <h4 className="font-semibold text-[#195733] mb-2">
+                {analysisResult.chemicals?.length > 0 && (
+                  <motion.div
+                    variants={fadeItem}
+                    whileHover={{ scale: 1.01 }}
+                    className="rounded-2xl border border-[#E6EFEA] bg-white p-5 sm:p-6 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <h4 className="font-semibold text-[#195733] mb-4 flex items-center gap-2">
+                      <Pill className="w-4 h-4 text-green-700" />
                       Recommended Medicines
                     </h4>
 
@@ -548,7 +564,7 @@ export default function ReportProblemPage() {
                       {analysisResult.chemicals.map((c, i) => (
                         <span
                           key={i}
-                          className="px-3 py-1 rounded-full text-xs font-medium bg-[#195733]/10 text-[#195733] border border-[#195733]/20"
+                          className="px-3 py-1.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition"
                         >
                           {c}
                         </span>

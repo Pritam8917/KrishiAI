@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import axios from "axios";
 import { GoogleGenAI } from "@google/genai";
 import { MANUAL_SUGGESTIONS } from "@/lib/manual_suggestions";
 import { createClient } from "@supabase/supabase-js";
@@ -17,7 +16,13 @@ const supabase = createClient(
 export async function POST(req) {
   try {
     const { image_url } = await req.json();
+    const res = await geminiai.models.list();
 
+    if (Array.isArray(res.models)) {
+      res.models.forEach((m) => {
+        console.log(m.name, m.supportedGenerationMethods);
+      });
+    }
     //image validation
     if (!image_url) {
       return NextResponse.json({ error: "image_url missing" }, { status: 400 });
@@ -36,20 +41,72 @@ export async function POST(req) {
       throw new Error("Supabase download failed");
     }
 
-    // Convert to buffer for ML upload
+    // Convert to buffer for image upload
     const buffer = await data.arrayBuffer();
 
-    /* ---------- ML Prediction ---------- */
-    const formData = new FormData();
-    formData.append("image", new Blob([buffer]), "leaf.jpg");
+    /* ---------- Disease Prediction ---------- */
+    // Convert buffer → base64
+    const base64Image = Buffer.from(buffer).toString("base64");
 
-    const mlRes = await axios.post(
-      "https://krishiai-1-8ycv.onrender.com/problem",
-      formData, //image send as multipart/form-data
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    // Prompt for structured JSON
+    const visionPrompt = `
+    You are an expert agricultural AI.
 
-    const { prediction, confidence } = mlRes.data;
+    Analyze the plant leaf image and return ONLY valid JSON:
+    Tasks:
+    - Detect if the leaf is healthy or diseased
+    - Predict the disease name
+    - Provide confidence (0–100)
+
+    Output format (STRICT JSON ONLY):
+    {
+    "disease": "string",
+    "confidence": number
+    }
+
+    Rules:
+    - No extra text outside JSON
+    - If uncertain, return "Unknown Disease"
+    - Keep treatment short and practical
+    `;
+
+    // Call Gemini for vision analysis
+    const geminiRes = await geminiai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: visionPrompt },
+            {
+              inlineData: {
+                mimeType: data.type || "image/jpeg", // or detect dynamically
+                data: base64Image,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    // Extract response
+    const rawText = geminiRes?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const cleaned = rawText
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+    // Parse safely
+    let prediction = "Unknown Disease";
+    let confidence = 0;
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      prediction = parsed.disease || prediction;
+      confidence =
+        typeof parsed.confidence === "number" ? parsed.confidence : confidence;
+    } catch (err) {
+      console.warn("⚠️ Gemini JSON parse failed:", err);
+    }
     console.log("ML Prediction:", prediction, "Confidence:", confidence);
 
     /* ---------- Manual fallback ---------- */
@@ -60,7 +117,7 @@ export async function POST(req) {
 
     try {
       const prompt = buildPrompt({ prediction, confidence, manual });
-
+      // Call Gemini for structured advice
       const response = await geminiai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [
@@ -71,7 +128,8 @@ export async function POST(req) {
         ],
       });
 
-      const rawtext = response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const rawtext =
+        response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
       const cleanedText = rawtext
         .replace(/```json/gi, "")
         .replace(/```/g, "")
