@@ -42,7 +42,7 @@ export async function GET(req) {
 
     const res = await axios.get(url, {
       params,
-      timeout: 8000, // ✅ prevents hanging
+      timeout: 8000, // prevents hanging
     });
 
     return NextResponse.json(res.data);

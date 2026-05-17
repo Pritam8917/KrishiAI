@@ -68,7 +68,7 @@ export default function ReportProblemPage() {
   );
   // const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -431,17 +431,8 @@ export default function ReportProblemPage() {
                 variants={stagger}
                 initial="hidden"
                 animate="visible"
-                className="
-      relative mt-14 p-6 sm:p-8
-      rounded-3xl
-      bg-white/80 backdrop-blur-xl
-      border border-[#E6EFEA]
-      shadow-[0_20px_60px_-20px_rgba(25,87,51,0.35)]
-      space-y-6
-      overflow-hidden
-    "
+                className="relative mt-14 p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-[#E6EFEA] shadow-[0_20px_60px_-20px_rgba(25,87,51,0.35)] space-y-6 overflow-hidden"
               >
-                {/* Soft glow */}
                 <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#2FA36B]/15 rounded-full blur-3xl pointer-events-none" />
 
                 {/* ---------- Header ---------- */}
@@ -454,12 +445,12 @@ export default function ReportProblemPage() {
                   </h2>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
-          ${
-            analysisResult.source === "AI-generated"
-              ? "bg-[#195733]/10 text-[#195733]"
-              : "bg-blue-100 text-blue-700"
-          }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap 
+                      ${
+                      analysisResult.source === "AI-generated"
+                      ? "bg-[#195733]/10 text-[#195733]"
+                      : "bg-blue-100 text-blue-700"
+                      }`}
                   >
                     {analysisResult.source === "AI-generated"
                       ? "AI Generated"
@@ -470,11 +461,7 @@ export default function ReportProblemPage() {
                 {/* ---------- Disease Card ---------- */}
                 <motion.div
                   variants={fadeItem}
-                  className="
-        rounded-2xl border border-[#E6EFEA] bg-white
-        p-5 sm:p-6
-        shadow-sm
-      "
+                  className="rounded-2xl border border-[#E6EFEA] bg-white p-5 sm:p-6 shadow-sm"
                 >
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     Detected Problem
