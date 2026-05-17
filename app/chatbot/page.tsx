@@ -70,7 +70,7 @@ export default function FloatingChatbot() {
         ...prev,
         {
           role: "assistant",
-          content: "Something went wrong.",
+          content: "Something went wrong. Please try again later.",
         },
       ]);
     }

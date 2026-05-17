@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: false,
-      reply: "Something went wrong",
+      reply: "Something went wrong. Please try again later.",
     });
   }
 }

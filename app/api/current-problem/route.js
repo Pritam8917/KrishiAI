@@ -72,7 +72,7 @@ export async function POST(req) {
 
     // Call Gemini for vision analysis
     const geminiRes = await geminiai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3-flash-preview",
       contents: [
         {
           role: "user",
@@ -117,6 +117,7 @@ export async function POST(req) {
 
     try {
       const prompt = buildPrompt({ prediction, confidence, manual });
+      
       // Call Gemini for structured advice
       const response = await geminiai.models.generateContent({
         model: "gemini-2.5-flash",
