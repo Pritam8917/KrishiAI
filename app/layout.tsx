@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-expect-error: side-effect import of global CSS
 import "./globals.css";
 import { Toaster } from "sonner";
 import SmoothScroll from "./components/ui/SmoothScroll";
