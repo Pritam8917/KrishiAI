@@ -205,15 +205,35 @@ export default function StartPrediction() {
         "https://krishiai-xa24.onrender.com/predict-yield",
         payload,
       );
-      console.log("RESULT:", res.data);
-      setResult(res.data);
+      const filteredResult = {
+        ...res.data,
+        yield_forecast: {
+          ...res.data.yield_forecast,
+          predicted_yield: Number(
+            res.data.yield_forecast.predicted_yield.toFixed(2),
+          ),
+          potential_yield_after_improvement: Number(
+            res.data.yield_forecast.potential_yield_after_improvement.toFixed(
+              2,
+            ),
+          ),
+        },
+      };
+      console.log("RESULT:", filteredResult);
+      setResult(filteredResult);
 
       //save result to supabase
       const { error } = await supabase.from("yield_predictions").insert([
         {
           user_id: farm.user_id,
-          predicted_yield:  res.data.yield_forecast.predicted_yield,
-          potential_after_improvement: res.data.yield_forecast.potential_yield_after_improvement,
+          predicted_yield: Number(
+            res.data.yield_forecast.predicted_yield.toFixed(2),
+          ),
+          potential_after_improvement: Number(
+            res.data.yield_forecast.potential_yield_after_improvement.toFixed(
+              2,
+            ),
+          ),
         },
       ]);
 
@@ -223,7 +243,6 @@ export default function StartPrediction() {
       } else {
         console.log("Saved to Supabase ✅");
       }
-
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error("AI ERROR:", err.response?.data || err.message);
@@ -432,7 +451,10 @@ export default function StartPrediction() {
         {/* RESULT */}
         {result && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div className="bg-white rounded-3xl shadow-xl border p-8 space-y-8 mt-10" id="results">
+            <div
+              className="bg-white rounded-3xl shadow-xl border p-8 space-y-8 mt-10"
+              id="results"
+            >
               {/* TITLE */}
               <h2 className="text-3xl font-bold text-[#195733]">
                 📊 AI Yield Report

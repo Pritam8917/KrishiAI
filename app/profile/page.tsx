@@ -67,6 +67,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [lastPrediction, setLastPrediction] = useState<Prediction | null>(null);
   const [lastDisease, setLastDisease] = useState<CropReport | null>(null);
+  //date formatting function
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleString("en-IN", {
