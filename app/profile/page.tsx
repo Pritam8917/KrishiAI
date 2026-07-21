@@ -11,7 +11,6 @@ import {
   Ruler,
   Edit,
   Sprout,
-  Lightbulb,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "../navbar/page";
