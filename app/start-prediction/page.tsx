@@ -433,12 +433,14 @@ export default function StartPrediction() {
 
         {/* METRICS */}
         {advisory && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-5">
             {[
               { label: "NDVI", value: advisory.ndvi.toFixed(2) },
               { label: "NDWI", value: advisory.ndwi.toFixed(2) },
               { label: "Rain", value: advisory.rain7d + " mm" },
               { label: "Temp", value: advisory.maxtemp + " °C" },
+              { label: "Humidity", value: advisory.humidity + "%" },
+              { label: "Wind", value: advisory.windspeed + " m/s" },
             ].map((m, i) => (
               <div key={i} className="bg-white p-5 rounded-xl shadow border">
                 <p className="text-xs text-gray-500">{m.label}</p>
@@ -470,21 +472,11 @@ export default function StartPrediction() {
                 </p>
               </div>
               {/* STATS */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border shadow-sm">
+              <div className="grid  gap-6">
+                <div className="bg-white p-6 rounded-xl border shadow-sm text-center">
                   <p className="text-sm text-gray-500">Confidence</p>
                   <p className="text-xl font-bold text-[#195733]">
                     {result.yield_forecast.confidence_range}
-                  </p>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl border shadow-sm">
-                  <p className="text-sm text-gray-500">Potential Yield</p>
-                  <p className="text-xl font-bold text-[#195733]">
-                    {Number(
-                      result.yield_forecast.potential_yield_after_improvement,
-                    ).toFixed(2)}{" "}
-                    {result.yield_forecast.unit}
                   </p>
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { Calendar } from "@/app/components/ui/calendar";
 interface CropInput {
   cropType: string;
   landSize: number;
-  landUnit: "acres" | "hectares" | "bigha";
+  landUnit: string;
   sowingDate?: Date;
 }
 interface CropSelectorProps {
@@ -25,38 +25,17 @@ export default function CropSelector({
   cropInput = {
     cropType: "",
     landSize: 0,
-    landUnit: "acres",
+    landUnit: "hectares",
     sowingDate: undefined,
   },
   onCropInputChange,
 }: CropSelectorProps) {
   const CROP_TYPES = [
-    { name: "Apple", icon: "🍎", season: "Winter" },
-    { name: "Blueberry", icon: "🫐", season: "Spring/Summer" },
-    { name: "Banana", icon: "🍌", season: "Annual" },
-    { name: "Cherry", icon: "🍒", season: "Spring" },
-    { name: "Chilli", icon: "🌶️", season: "Kharif/Rabi" },
-    { name: "Chickpea", icon: "🫘", season: "Rabi" },
-    { name: "Coconut", icon: "🥥", season: "Annual" },
-    { name: "Ginger", icon: "🫚", season: "Kharif" },
-    { name: "Grapes", icon: "🍇", season: "Winter" },
-    { name: "Groundnut", icon: "🥜", season: "Kharif/Rabi" },
-    { name: "Mustard", icon: "🌻", season: "Rabi" },
+    { name: "Cotton", icon: "🪄", season: "Annual" },
     { name: "Maize", icon: "🌽", season: "Kharif/Rabi" },
-    { name: "Millet", icon: "🌾", season: "Kharif" },
-    { name: "Mango", icon: "🥭", season: "Summer" },
-    { name: "Orange", icon: "🍊", season: "Winter" },
-    { name: "Onion", icon: "🧅", season: "Rabi" },
     { name: "Potato", icon: "🥔", season: "Rabi" },
-    { name: "Pigeon Pea", icon: "🫛", season: "Kharif" },
     { name: "Rice", icon: "🌾", season: "Kharif" },
     { name: "Sugarcane", icon: "🎋", season: "Annual" },
-    { name: "Sunflower", icon: "🌻", season: "Kharif/Rabi" },
-    { name: "Strawberry", icon: "🍓", season: "Rabi/Kharif" },
-    { name: "Soybean", icon: "🫘", season: "Kharif" },
-    { name: "Sorghum", icon: "🌾", season: "Kharif/Rabi" },
-    { name: "Tomato", icon: "🍅", season: "Rabi/Kharif" },
-    { name: "Turmeric", icon: "🟡", season: "Kharif" },
     { name: "Wheat", icon: "🌾", season: "Rabi" },
   ];
   return (
@@ -139,8 +118,8 @@ export default function CropSelector({
               Unit
             </Label>
             <Select
-              value={cropInput?.landUnit || "acres"}
-              onValueChange={(value: "acres" | "hectares" | "bigha") =>
+              value={cropInput?.landUnit || "hectares"}
+              onValueChange={(value:"hectares") =>
                 onCropInputChange({ ...cropInput, landUnit: value })
               }
             >
@@ -148,9 +127,7 @@ export default function CropSelector({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="acres">Acres</SelectItem>
                 <SelectItem value="hectares">Hectares</SelectItem>
-                <SelectItem value="bigha">Bigha</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -82,47 +82,86 @@ export default function CropHealth() {
     loadFarm();
   }, []);
 
-  /* ================= FETCH SATELLITE ================= */
+  /* ================= FETCH SATELLITE AND WEATHER DATA ================= */
 
   useEffect(() => {
-    if (!farm?.latitude || !farm?.longitude) return;
+    if (!farm?.latitude || !farm?.longitude || !userId) return;
+    const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
-    axios
-      .post("/api/sentinel/indices", {
-        lat: farm.latitude,
-        lon: farm.longitude,
-      })
-      .then((res) => {
-        const timeline = res.data.timeline;
-        if (!timeline?.length) return;
+    const fetchData = async () => {
+      try {
+        // 1. Check Supabase Cache
+        const { data: cache } = await supabase
+          .from("crop_health_cache")
+          .select("*")
+          .eq("user_id", userId)
+          .single();
 
-        const latest = timeline[timeline.length - 1];
-        setNdvi(latest.ndvi);
-        setNdwi(latest.ndwi);
-      })
-      .catch(console.error);
-  }, [farm]);
+        if (cache) {
+          const age = Date.now() - new Date(cache.updated_at).getTime();
 
-  /* ================= FETCH WEATHER ================= */
+          const sameLocation =
+            cache.latitude === farm.latitude &&
+            cache.longitude === farm.longitude;
 
-  useEffect(() => {
-    if (!farm?.latitude || !farm?.longitude) return;
-    axios
-      .get(`/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`)
-      .then((res) => setWeather(res.data))
-      .catch(console.error);
-  }, [farm]);
+          if (sameLocation && age < CACHE_DURATION) {
+            console.log("Loaded from Supabase cache");
 
-  /* ================= WEATHER METRICS ================= */
+            setNdvi(cache.ndvi);
+            setNdwi(cache.ndwi);
+            setWeather(cache.weather);
 
+            return;
+          }
+        }
+
+        console.log("Fetching fresh data...");
+        const [satelliteRes, weatherRes] = await Promise.all([
+          axios.post("/api/sentinel/indices", {
+            lat: farm.latitude,
+            lon: farm.longitude,
+          }),
+          axios.get(`/api/weather?lat=${farm.latitude}&lon=${farm.longitude}`),
+        ]);
+        const timeline = satelliteRes.data.timeline;
+        let latestNDVI = null;
+        let latestNDWI = null;
+
+        if (timeline?.length) {
+          const latest = timeline[timeline.length - 1];
+
+          latestNDVI = latest.ndvi;
+          latestNDWI = latest.ndwi;
+
+          setNdvi(latestNDVI);
+          setNdwi(latestNDWI);
+        }
+
+        setWeather(weatherRes.data);
+
+        await supabase.from("crop_health_cache").upsert({
+          user_id: userId,
+          latitude: farm.latitude,
+          longitude: farm.longitude,
+          ndvi: latestNDVI,
+          ndwi: latestNDWI,
+          weather: weatherRes.data,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, [farm, userId]);
+
+  // ================= WEATHER METRICS =================
   const rain7d =
     weather?.daily.precipitation_sum?.slice(-7).reduce((a, b) => a + b, 0) ?? 0;
-
   const rain14d =
     weather?.daily.precipitation_sum?.reduce((a, b) => a + b, 0) ?? 0;
-
   const maxtemp = weather ? Math.max(...weather.daily.temperature_2m_max) : 0;
-
   const avgHumidity = weather
     ? Math.max(...weather.daily.relative_humidity_2m_mean)
     : 0;
@@ -212,7 +251,7 @@ export default function CropHealth() {
     saveAdvisory,
   ]);
 
-  /* ================= AI UI LOGIC ================= */
+  // UI LOGIC
 
   const vegetation =
     ndvi === null ? <InlineLoader /> : getVegetationStatus(ndvi);
@@ -248,7 +287,7 @@ export default function CropHealth() {
         ndvi,
       })
     );
-    
+
   const risks = [];
   if (rain7d > 50) {
     risks.push({

@@ -336,9 +336,9 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Data Section */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
                     {/* Predicted */}
-                    <div className="p-4 rounded-xl bg-[#F4FBF7] border border-emerald-100">
+                    <div className="p-4 rounded-xl bg-[#F4FBF7] border border-emerald-100 text-center">
                       <p className="text-xs text-gray-500 mb-1">
                         Predicted Yield
                       </p>
@@ -347,30 +347,6 @@ export default function ProfilePage() {
                       </p>
                       <p className="text-xs text-gray-500">tons/hectare</p>
                     </div>
-
-                    {/* Potential */}
-                    <div className="p-4 rounded-xl bg-[#F0F9FF] border border-blue-100">
-                      <p className="text-xs text-gray-500 mb-1">
-                        After Improvement
-                      </p>
-                      <p className="text-xl font-bold text-blue-600">
-                        {lastPrediction.potential_after_improvement}
-                      </p>
-                      <p className="text-xs text-gray-500">tons/hectare</p>
-                    </div>
-                  </div>
-
-                  {/* Insight */}
-                  <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-100 rounded-lg p-3">
-                    <Lightbulb className="w-4 h-4 text-yellow-500 inline mr-2" />
-                    You can improve yield by{" "}
-                    <b>
-                      {(
-                        lastPrediction.potential_after_improvement -
-                        lastPrediction.predicted_yield
-                      ).toFixed(2)}
-                    </b>{" "}
-                    tons/hectare with better practices.
                   </div>
                 </CardContent>
               </Card>

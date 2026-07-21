@@ -54,7 +54,7 @@ export default function FarmSetup() {
   const [cropInput, setCropInput] = useState({
     cropType: "",
     landSize: 0,
-    landUnit: "acres" as "acres" | "hectares" | "bigha",
+    landUnit: "hectares",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -87,17 +87,6 @@ export default function FarmSetup() {
       toast.error("Please select district");
       return;
     }
-
-    // if (!location.block) {
-    //   toast.error("Please select block");
-    //   return;
-    // }
-
-    // if (!location.village) {
-    //   toast.error("Please select village");
-    //   return;
-    // }
-
     if (location.latitude === null || location.longitude === null) {
       toast.error("Unable to detect farm coordinates");
       return;
@@ -133,8 +122,6 @@ export default function FarmSetup() {
           farmer_name: farmerName,
           state: location.state,
           district: location.district,
-          block: location.block?.trim() ? location.block : null,
-          village: location.village?.trim() ? location.village : null,
           latitude: location.latitude,
           longitude: location.longitude,
           crop: cropInput.cropType,
