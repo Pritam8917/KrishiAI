@@ -1,7 +1,6 @@
 export interface FarmProfile {
   state: string;
   district: string;
-  village: string;
   crop: string;
   latitude: number;
   longitude: number;

@@ -66,12 +66,16 @@ export default function CropHealth() {
         const userID = data.user.id;
         setUserId(userID);
 
-        const { data: farmData } = await supabase
+        const { data: farmData,error} = await supabase
           .from("farm_profiles")
-          .select("state,district,village,crop,latitude,longitude")
+          .select("state,district,crop,latitude,longitude")
           .eq("user_id", userID)
           .single();
 
+        if (error) {
+          console.error(error);
+          return;
+        }
         setFarm(farmData);
       } finally {
         setAuthLoading(false);
