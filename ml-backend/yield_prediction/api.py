@@ -42,6 +42,8 @@ class AdvisoryInput(BaseModel):
     maxtemp: float
     humidity: float
     windspeed: float
+    ndvi: float
+    ndwi: float
     
 # Fetch Farm Data
 def fetch_user_farm_data(user_id: str):
@@ -69,9 +71,6 @@ def predict_yield_and_advisory(advisory: AdvisoryInput):
 
         if not farm_data:
             raise HTTPException(404, "Farm data not found")
-
-        if farm_data.get("land_size", 0) <= 0:
-            raise HTTPException(400, "Invalid farm size")
 
         # ML Input
         model_input = {
