@@ -51,7 +51,7 @@ def fetch_user_farm_data(user_id: str):
     res = (
         supabase
         .from_("farm_profiles")
-        .select("crop")
+        .select("crop", "land_size")
         .eq("user_id", user_id)
         .single()
         .execute()
@@ -75,6 +75,7 @@ def predict_yield_and_advisory(advisory: AdvisoryInput):
         # ML Input
         model_input = {
             "crop_type": farm_data.get("crop"),
+            "land_size": farm_data.get("land_size"),
             "rainfall": advisory.rain7d,
             "temperature": advisory.maxtemp,
             "humidity": advisory.humidity,

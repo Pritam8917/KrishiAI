@@ -2,7 +2,7 @@ def explain_yield_drivers(data):
     reasons = []
 
     # Area based reasoning
-    if data["area"] > 5:
+    if data["land_size"] > 5:
         reasons.append("Larger land area increases total production potential.")
     else:
         reasons.append("Smaller land area limits total yield.")
@@ -19,9 +19,9 @@ def simulate_improvement(data):
     improved = data.copy()
 
     # simulate 10% area improvement
-    improved["area"] = improved["area"] * 1.1
+    improved["land_size"] = improved["land_size"] * 1.1
 
-    return improved["area"]
+    return improved["land_size"]
 
 
 def yield_confidence(yield_value):
