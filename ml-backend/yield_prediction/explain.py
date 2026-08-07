@@ -9,7 +9,7 @@ def explain_yield_drivers(data):
 
     # Crop + region reasoning
     reasons.append(
-        f"Historical yield patterns of {data['crop_name']} in {data['district_name']} were used."
+        f"Historical yield patterns of {data['crop_type']} in {data['district_name']} were used."
     )
 
     return reasons
