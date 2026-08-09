@@ -84,7 +84,6 @@ export default function ReportProblemPage() {
 
   /* ---------------- Auth ---------------- */
   useEffect(() => {
-    //we use useEffect here because it is a side-effect (checking auth status) that should run after the component mounts.
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         router.replace("/auth/login");
@@ -151,8 +150,6 @@ export default function ReportProblemPage() {
     try {
       setAnalyzing(true);
       setErrorMsg(null);
-
-      // Compress first (faster upload)
       const compressedFile = await compressImage(imageFile);
       setStatus(" Uploading image...");
       const imageUrl = await uploadImage(compressedFile);

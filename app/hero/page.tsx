@@ -80,7 +80,7 @@ export default function HeroSection() {
     { icon: Sparkles, label: "AI Recommendations", color: "bg-amber-500" },
   ];
 
-  /* 👇 Stats visibility detection */
+
   const statsRef = useRef<HTMLDivElement | null>(null);
   const statsInView = useInView(statsRef, { once: true });
   const router = useRouter();
@@ -149,16 +149,6 @@ export default function HeroSection() {
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Button>
             </div>
-
-            {/* <Button
-              variant="outline"
-              size="lg"
-              className="px-12 py-7 text-lg font-bold rounded-xl
-              text-white border-white/30 bg-[#95A592]
-              transition-all hover:-translate-y-1 hover:bg-white/20 cursor-pointer"
-            >
-              Watch Demo
-            </Button> */}
           </div>
 
           {/* Feature Pills */}
@@ -196,7 +186,6 @@ export default function HeroSection() {
             <motion.div
               key={index}
               variants={fadeUp}
-              whileHover={{ scale: 1.06 }}
               className={`text-center p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 ${index === 2 ? "col-span-2 md:col-span-1" : ""} `}
             >
               <div className="text-2xl md:text-4xl font-bold text-amber-400 mb-1">

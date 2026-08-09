@@ -107,15 +107,6 @@ export default function Features() {
                 </div>
               </div>
 
-              {/* <motion.p
-                variants={fadeUp}
-                className="text-muted-foreground mb-10 max-w-xl"
-              >
-                KrishiAI combines satellite intelligence, weather insights, and
-                AI models to help farmers make smarter decisions with
-                confidence.
-              </motion.p> */}
-
               {/* BENEFITS CARDS */}
               <motion.div
                 variants={stagger}
@@ -125,7 +116,6 @@ export default function Features() {
                   <motion.div
                     key={index}
                     variants={fadeUp}
-                    whileHover={{ y: -4 }}
                     className="
                       group flex items-start gap-3 p-4 rounded-xl
                       bg-white/70 backdrop-blur-md border border-[#E6EFEA]
